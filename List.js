@@ -58,6 +58,9 @@ var List = Module(function() {
 			var element = oldArrays.shift();
 			do {
 				if (element.buffer.byteLength === array * size(description)) {
+					element.each(function(item,index) {
+						element.set(index,0);
+					});
 					return element;
 				}
 				oldArrays.push(element);
@@ -83,10 +86,6 @@ var List = Module(function() {
 	function getList(entries, description) {
 		var result = putList(entries, description);
 		if (!result) {
-			// if (description === "f32" && entries === 8) {
-			// console.trace();
-			// console.log("new", description, entries)
-			// }
 			result = new Node(entries, description);
 		}
 		result.view(description);
@@ -192,20 +191,28 @@ var List = Module(function() {
 	}
 
 	/**
-	 * Creates a new linkedList
+	 * Creates a new linkedList. Specify type and length to make all lists in the chain the same.
 	 *
 	 * @method  linked
 	 *
 	 * @returns {Object}
 	 */
 
-	function linked() {
-		return {
+	function linked(description, entries) {
+		var list = {
 			push: pushList,
 			each: eachList,
 			first: NULL,
 			last: NULL
 		};
+		if (description) {
+			list.get = function() {
+				var result = getList(entries, description);
+				this.push(result);
+				return result;
+			};
+		}
+		return list;
 	}
 	// end functions
 

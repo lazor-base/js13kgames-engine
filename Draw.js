@@ -14,15 +14,15 @@ var Draw = Module(function(event) {
 		context = canvas.getContext("2d");
 	});
 
-	function poly(entity, fillColor, strokeColor) {
+	function poly(entity, context, fillColor, strokeColor) {
 		context.beginPath();
-		var vertices = getVertices(entity);
+		var vertices = physics.getVertices(entity);
 		context.moveTo(vertices.get(X), vertices.get(Y));
 		for (i = 2; i < vertices.length; i += 2) {
 			context.lineTo(vertices.get(i + X), vertices.get(i + Y));
 		}
 		context.lineTo(vertices.get(X), vertices.get(Y));
-		putList(vertices);
+		List.put(vertices);
 		// context.beginPath();
 		// context.rect(-(entity.get(WIDTH) / 2), -(entity.get(HEIGHT) / 2), entity.get(WIDTH), entity.get(HEIGHT));
 		context.fillStyle = fillColor;
@@ -33,14 +33,14 @@ var Draw = Module(function(event) {
 		context.closePath();
 	}
 
-	function setupDraw(entity, callback) {
+	function setupDraw(entity, context, callback) {
 		var x = entity.get(X);
 		var y = entity.get(Y);
 		var angle = entity.get(ANGLE) || 0;
 		context.save();
 		context.translate(x, y);
 		context.rotate(angle * Math.PI / 180);
-		callback(context,canvas);
+		callback(entity, context);
 		context.restore();
 	}
 
@@ -53,7 +53,13 @@ var Draw = Module(function(event) {
 	// end other
 
 	return {
+<<<<<<< HEAD
 		// return
+=======
+		get canvas() {
+			return canvas;
+		},
+>>>>>>> Working lighting implementation
 		clear: clear,
 		poly: poly,
 		setup: setupDraw

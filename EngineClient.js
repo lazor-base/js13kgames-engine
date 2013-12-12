@@ -95,7 +95,6 @@
 		// physics
 		var axes = [];
 		var smallest = {};
-		var overlap = 9e9;
 
 		// player
 		var uniqueId = 0;
@@ -108,6 +107,10 @@
 
 		// riffwave
 		var oldData = [];
+
+		// struct
+		var structList = {};
+		var structId = 0;
 
 		//time
 		var now = Date.now;
@@ -190,12 +193,14 @@
 
 		function moveEvent(e) {
 			preventDefault(e);
-			if (event.offsetX || event.offsetX == 0) { //for webkit browser like safari and chrome
-				var mousex = event.offsetX;
-				var mousey = event.offsetY;
-			} else if (event.layerX || event.layerX == 0) { // for mozilla firefox
-				var mousex = event.layerX;
-				var mousey = event.layerY;
+			var mousex = 0;
+			var mousey = 0;
+			if (e.pageX || e.pageY) {
+				mousex = e.pageX;
+				mousey = e.pageY;
+			} else if (e.clientX || e.clientY) {
+				mousex = e.clientX;
+				mousey = e.clientY;
 			}
 			changeKey(eventType(e.type), 0, MOUSE_X, mousex);
 			changeKey(eventType(e.type), 0, MOUSE_Y, mousey);
@@ -363,14 +368,14 @@
 
 		function listen(node, type) {
 			if (type === MOUSE) {
-				document[addEventListener]("mousedown", pressEvent);
-				document[addEventListener]("mouseup", releaseEvent);
-				document[addEventListener]("mousemove", moveEvent);
-				document[addEventListener]("mousewheel", scrollEvent);
+				node[addEventListener]("mousedown", pressEvent);
+				node[addEventListener]("mouseup", releaseEvent);
+				node[addEventListener]("mousemove", moveEvent);
+				node[addEventListener]("mousewheel", scrollEvent);
 			}
 			if (type === KEYBOARD) {
-				document[addEventListener]("keydown", pressEvent);
-				document[addEventListener]("keyup", releaseEvent);
+				node[addEventListener]("keydown", pressEvent);
+				node[addEventListener]("keyup", releaseEvent);
 			}
 		}
 
@@ -426,13 +431,13 @@
 		// draw
 		event.on("ready", function() {
 			canvas = makeGUI("canvas");
-			canvas.width = 900;
-			canvas.height = 600;
+			canvas.width = 820;
+			canvas.height = 720;
 			putGUI(canvas);
 			context = canvas.getContext("2d");
 		});
 
-		function poly(entity, fillColor, strokeColor) {
+		function poly(entity, context, fillColor, strokeColor) {
 			context.beginPath();
 			var vertices = getVertices(entity);
 			context.moveTo(vertices.get(X), vertices.get(Y));
@@ -451,14 +456,14 @@
 			context.closePath();
 		}
 
-		function setupDraw(entity, callback) {
+		function setupDraw(entity, context, callback) {
 			var x = entity.get(X);
 			var y = entity.get(Y);
 			var angle = entity.get(ANGLE) || 0;
 			context.save();
 			context.translate(x, y);
 			context.rotate(angle * Math.PI / 180);
-			callback(context, canvas);
+			callback(entity, context);
 			context.restore();
 		}
 
@@ -544,7 +549,7 @@
 
 		function putList(array, description) {
 			if (array && !description) {
-				if (!has(oldArrays, array)) {
+				if (!Help.has(oldArrays, array)) {
 					oldArrays.push(array);
 				}
 			} else if (oldArrays[LENGTH] && array && description) {
@@ -552,6 +557,9 @@
 				var element = oldArrays.shift();
 				do {
 					if (element.buffer.byteLength === array * size(description)) {
+						element.each(function(item, index) {
+							element.set(index, 0);
+						});
 						return element;
 					}
 					oldArrays.push(element);
@@ -689,13 +697,21 @@
 		 * @returns {Object}
 		 */
 
-		function linked() {
-			return {
+		function linked(description, entries) {
+			var list = {
 				push: pushList,
 				each: eachList,
 				first: NULL,
 				last: NULL
 			};
+			if (description) {
+				list.get = function() {
+					var result = getList(entries, description);
+					this.push(result);
+					return result;
+				};
+			}
+			return list;
 		}
 
 		// loop
@@ -744,6 +760,10 @@
 
 		// physics
 
+		var numbers = getList(2, "f32");
+		numbers.set(0, 9e9);
+		numbers.set(1, Math.PI / 180);
+
 		function dot(vector1, vector2) {
 			return (getValue(vector1, X) * getValue(vector2, X)) + (getValue(vector1, Y) * getValue(vector2, Y));
 		}
@@ -785,8 +805,8 @@
 			var MTV = getf32List(3);
 			var axis = getf32List(2);
 			axes.length = 0;
-			var vertices1 = rotate(getVertices(entity1), entity1);
-			var vertices2 = rotate(getVertices(entity2), entity2);
+			var vertices1 = getVertices(entity1, TRUE);
+			var vertices2 = getVertices(entity2, TRUE);
 			axes.push(getAxes(vertices1), getAxes(vertices2));
 			for (var i = 0; i < axes.length; i++) {
 				for (var e = 0; e < axes[i].length; e += 2) {
@@ -805,7 +825,7 @@
 						var projectionOverlap = getOverlap(projection1, projection2);
 						putInList(projection1, projection2)
 						// check for minimum
-						if (projectionOverlap < overlap) {
+						if (projectionOverlap < getValue(numbers, 0)) {
 							// then set this one as the smallest
 							setXY(MTV, getValue(axis, X), getValue(axis, Y))
 							setValue(MTV, 2, projectionOverlap);
@@ -838,28 +858,21 @@
 			return vector;
 		}
 
-		function getVertices(entity) {
+		function getVertices(entity, rotated) {
 			// counter clockwise vertices
 			var width = (getValue(entity, WIDTH) / 2);
 			var height = (getValue(entity, HEIGHT) / 2);
-			if (getValue(entity, SIDES) === 4) {
-				var vertices = getf32List(8);
-				setValue(vertices, 0, +width); // top right
-				setValue(vertices, 1, -height);
-				setValue(vertices, 2, -width); // top left
-				setValue(vertices, 3, -height);
-				setValue(vertices, 4, -width); // bottom left
-				setValue(vertices, 5, +height);
-				setValue(vertices, 6, +width); // bottom right
-				setValue(vertices, 7, +height);
-			} else if (getValue(entity, SIDES) === 3) {
-				var vertices = getf32List(6);
-				setValue(vertices, 0, +width); // bottom right
-				setValue(vertices, 1, +height);
-				setValue(vertices, 2, 0); // top
-				setValue(vertices, 3, -height);
-				setValue(vertices, 4, -width); // bottom left
-				setValue(vertices, 5, +height);
+			var vertices = getf32List(8);
+			setValue(vertices, 0, -width); // top left
+			setValue(vertices, 1, -height);
+			setValue(vertices, 2, +width); // top right
+			setValue(vertices, 3, -height);
+			setValue(vertices, 4, +width); // bottom right
+			setValue(vertices, 5, +height);
+			setValue(vertices, 6, -width); // bottom left
+			setValue(vertices, 7, +height);
+			if (rotated) {
+				return rotate(vertices, entity);
 			}
 			return vertices;
 		}
@@ -888,7 +901,7 @@
 			for (var i = 0; i < vertices.length; i += 2) {
 				var x = getValue(vertices, i + X);
 				var y = getValue(vertices, i + Y);
-				var angle = getValue(entity, ANGLE) * Math.PI / 180;
+				var angle = getValue(entity, ANGLE) * getValue(numbers, 1);
 				setXY(vertices, ((x * Math.cos(angle)) - (y * Math.sin(angle))), ((x * Math.sin(angle)) + (y * Math.cos(angle))), i)
 			}
 			return vertices;
@@ -1161,6 +1174,19 @@
 			return (ms / 1000) * sampleRate;
 		}
 
+		// struct
+
+		function makeStruct(length, type) {
+			structId++;
+			structList[structId] = List.linked(type, length);
+			return structId;
+		}
+		// function setStruct(id)
+
+		function getStruct(id) {
+			return structList[id];
+		}
+
 		// time
 
 		function nowTime() {
@@ -1215,6 +1241,9 @@
 		};
 
 		window.Draw = {
+			get canvas() {
+				return canvas;
+			},
 			clear: clear,
 			poly: poly,
 			setup: setupDraw
@@ -1244,7 +1273,7 @@
 		window.Physics = {
 			test: test,
 			getVertices: getVertices
-		}
+		};
 
 		window.Player = {
 			length: 6,
@@ -1259,6 +1288,11 @@
 			length: length,
 			get: get,
 			make: make
+		};
+
+		window.Struct = {
+			make: makeStruct,
+			get: getStruct
 		};
 
 		window.Time = {

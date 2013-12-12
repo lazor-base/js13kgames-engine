@@ -1,4 +1,4 @@
-exports = {
+module.exports = {
 	parse: {
 		strict: false,
 		filename: process.argv[2]
@@ -7,7 +7,7 @@ exports = {
 		sequences: true,
 		properties: true,
 		dead_code: true,
-		drop_debugger: true,
+		drop_debugger: false,
 		unsafe: true,
 		unsafe_comps: true,
 		conditionals: true,
@@ -101,16 +101,20 @@ exports = {
 			MOVEDOWN: 3,
 
 			// polygon / light.js data
+			VELOCITY_X: 5,
+			VELOCITY_Y: 6,
+			R: 7,
+			G: 8,
+			B: 9,
+			RADIUS: 10,
+			// circle
+			RANGE: 11,
+			FALLOFF: 12,
+			// other
 			TRUE: 1,
 			FALSE: 0,
-			RADIUS: 2,
-			READY: 3,
-			GLOBAL_VERTICES: 4,
-			VERTICES: 5,
-			RANGE: 6,
-			FALLOFF: 7,
-			POLYGON_ID: 8,
-			ID: 0,
+			LIGHTING_X:0,
+			LIGHTING_Y:1
 		}
 	},
 	output: {
@@ -122,7 +126,7 @@ exports = {
 		inline_script: true,
 		width: 80,
 		max_line_len: 32000,
-		beautify: false,
+		beautify: true,
 		source_map: null,
 		bracketize: false,
 		semicolons: true,

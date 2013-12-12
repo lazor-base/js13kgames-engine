@@ -87,7 +87,7 @@ with(UglifyJS) {
 			var newSize = getUTF8Size(uglifiedCode);
 			var saved = ((1 - newSize / oldSize) * 100).toFixed(2);
 			console.log("saved " + saved + " % old size: " + oldSize + "B new size: " + newSize + "B");
-			var minifiedCode = Minify(uglifiedCode);
+			// var minifiedCode = Minify(uglifiedCode);
 
 			var location, split;
 			if (process.argv[3].indexOf("ClientServer") > -1) {
@@ -103,9 +103,8 @@ with(UglifyJS) {
 				split = "";
 				location = "server";
 			}
-			console.log(split, location, process.argv[3])
 			var name = process.argv[3].split(split).join("");
-			fs.writeFile('build/' + location + "/" + name, minifiedCode, function(err) {
+			fs.writeFile('build/' + location + "/" + name, uglifiedCode, function(err) {
 				if (err) throw err;
 				console.log('Saved to build/' + process.argv[3]);
 			});

@@ -50,12 +50,14 @@ var Control = (function(navigator, window, document) {
 
 		function moveEvent(e) {
 			preventDefault(e);
-			if (event.offsetX || event.offsetX == 0) { //for webkit browser like safari and chrome
-				var mousex = event.offsetX;
-				var mousey = event.offsetY;
-			} else if (event.layerX || event.layerX == 0) { // for mozilla firefox
-				var mousex = event.layerX;
-				var mousey = event.layerY;
+			var mousex = 0;
+			var mousey = 0;
+			if (e.pageX || e.pageY) {
+				mousex = e.pageX;
+				mousey = e.pageY;
+			} else if (e.clientX || e.clientY) {
+				mousex = e.clientX;
+				mousey = e.clientY;
 			}
 			changeKey(eventType(e.type), 0, MOUSE_X, mousex);
 			changeKey(eventType(e.type), 0, MOUSE_Y, mousey);
@@ -224,14 +226,14 @@ var Control = (function(navigator, window, document) {
 
 		function listen(node, type) {
 			if (type === MOUSE) {
-				document[addEventListener]("mousedown", pressEvent);
-				document[addEventListener]("mouseup", releaseEvent);
-				document[addEventListener]("mousemove", moveEvent);
-				document[addEventListener]("mousewheel", scrollEvent);
+				node[addEventListener]("mousedown", pressEvent);
+				node[addEventListener]("mouseup", releaseEvent);
+				node[addEventListener]("mousemove", moveEvent);
+				node[addEventListener]("mousewheel", scrollEvent);
 			}
 			if (type === KEYBOARD) {
-				document[addEventListener]("keydown", pressEvent);
-				document[addEventListener]("keyup", releaseEvent);
+				node[addEventListener]("keydown", pressEvent);
+				node[addEventListener]("keyup", releaseEvent);
 			}
 		}
 		// end functions 

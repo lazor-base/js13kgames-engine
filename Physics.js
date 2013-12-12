@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 var Physics = Module(function(event) {
 	// name: physics
 
@@ -6,6 +7,13 @@ var Physics = Module(function(event) {
 	var smallest = {};
 	var overlap = 9e9;
 	// end variables
+=======
+var Physics = Module(function() {
+	var axes = [];
+	var numbers = List.get(2,"f32");
+	numbers.set(0,9e9);
+	numbers.set(1,Math.PI/180);
+>>>>>>> Working lighting implementation
 
 	// functions
 	function dot(vector1, vector2) {
@@ -69,7 +77,7 @@ var Physics = Module(function(event) {
 					var projectionOverlap = getOverlap(projection1, projection2);
 					putInList(projection1, projection2)
 					// check for minimum
-					if (projectionOverlap < overlap) {
+					if (projectionOverlap < getValue(numbers,0)) {
 						// then set this one as the smallest
 						setXY(MTV, getValue(axis, X), getValue(axis, Y))
 						setValue(MTV, 2, projectionOverlap);
@@ -102,28 +110,21 @@ var Physics = Module(function(event) {
 		return vector;
 	}
 
-	function getVertices(entity) {
+	function getVertices(entity, rotated) {
 		// counter clockwise vertices
 		var width = (getValue(entity, WIDTH) / 2);
 		var height = (getValue(entity, HEIGHT) / 2);
-		if (getValue(entity, SIDES) === 4) {
-			var vertices = getf32List(8);
-			setValue(vertices, 0, +width); // top right
-			setValue(vertices, 1, -height);
-			setValue(vertices, 2, -width); // top left
-			setValue(vertices, 3, -height);
-			setValue(vertices, 4, -width); // bottom left
-			setValue(vertices, 5, +height);
-			setValue(vertices, 6, +width); // bottom right
-			setValue(vertices, 7, +height);
-		} else if (getValue(entity, SIDES) === 3) {
-			var vertices = getf32List(6);
-			setValue(vertices, 0, +width); // bottom right
-			setValue(vertices, 1, +height);
-			setValue(vertices, 2, 0); // top
-			setValue(vertices, 3, -height);
-			setValue(vertices, 4, -width); // bottom left
-			setValue(vertices, 5, +height);
+		var vertices = getf32List(8);
+		setValue(vertices, 0, -width); // top left
+		setValue(vertices, 1, -height);
+		setValue(vertices, 2, +width); // top right
+		setValue(vertices, 3, -height);
+		setValue(vertices, 4, +width); // bottom right
+		setValue(vertices, 5, +height);
+		setValue(vertices, 6, -width); // bottom left
+		setValue(vertices, 7, +height);
+		if(rotated) {
+			return rotate(vertices,entity);
 		}
 		return vertices;
 	}
@@ -152,7 +153,7 @@ var Physics = Module(function(event) {
 		for (var i = 0; i < vertices.length; i += 2) {
 			var x = getValue(vertices, i + X);
 			var y = getValue(vertices, i + Y);
-			var angle = getValue(entity, ANGLE) * Math.PI / 180;
+			var angle = getValue(entity, ANGLE) * getValue(numbers,1);
 			setXY(vertices, ((x * Math.cos(angle)) - (y * Math.sin(angle))), ((x * Math.sin(angle)) + (y * Math.cos(angle))), i)
 		}
 		return vertices;

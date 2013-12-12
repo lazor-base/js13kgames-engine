@@ -482,15 +482,15 @@
 		}
 
 		function setupDraw(entity, callback) {
-		var x = entity.get(X);
-		var y = entity.get(Y);
-		var angle = entity.get(ANGLE) || 0;
-		context.save();
-		context.translate(x, y);
-		context.rotate(angle * Math.PI / 180);
-		callback(context,canvas);
-		context.restore();
-	}
+			var x = entity.get(X);
+			var y = entity.get(Y);
+			var angle = entity.get(ANGLE) || 0;
+			context.save();
+			context.translate(x, y);
+			context.rotate(angle * Math.PI / 180);
+			callback(context, canvas);
+			context.restore();
+		}
 
 		function clear() {
 			context.clearRect(0, 0, canvas.width, canvas.height);
@@ -719,13 +719,21 @@
 		 * @returns {Object}
 		 */
 
-		function linked() {
-			return {
+		function linked(type, length) {
+			var list = {
 				push: pushList,
 				each: eachList,
 				first: NULL,
 				last: NULL
 			};
+			if (type) {
+				list.get = function() {
+					var result = getList(length, type);
+					this.push(result);
+					return result;
+				};
+			}
+			return list;
 		}
 
 		// player
@@ -1026,6 +1034,7 @@
 		};
 
 		window.Draw = {
+			canvas: canvas,
 			clear: clear,
 			poly: poly,
 			setup: setupDraw
