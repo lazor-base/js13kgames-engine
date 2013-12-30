@@ -29,7 +29,7 @@ var Loop = Module(function(event) {
 	function run() {
 		if (stop === false) {
 			lastTick = currentTick;
-			currentTick = Time.micro();
+			currentTick = TIME_MICRO();
 			for (var i = 0; i < intervals.length; i++) {
 				if (stop) {
 					return true;
@@ -48,7 +48,7 @@ var Loop = Module(function(event) {
 	function every(interval, callback) {
 		if (intervals.indexOf("" + interval) === -1) {
 			intervals.push("" + interval);
-			intervalTicks.push(Time.micro());
+			intervalTicks.push(TIME_MICRO());
 		}
 		event.on("" + interval, callback);
 	}

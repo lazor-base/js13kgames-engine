@@ -40,8 +40,8 @@ var Message = Module(function(event) {
 	}
 
 	function decoder(description) {
-		var bytes = List.size(description);
-		var arr = List.get(1, description);
+		var bytes = LIST_SIZE(description);
+		var arr = LIST_GET(1, description);
 		var char = new Uint8Array(arr.buffer);
 		return function(string, offset) {
 			// Again, pay attention to endianness
@@ -55,7 +55,7 @@ var Message = Module(function(event) {
 	};
 
 	function encoder(description) {
-		var arr = List.get(1, description);
+		var arr = LIST_GET(1, description);
 		var char = new Uint8Array(arr.buffer);
 		return function(number) {
 			arr.set(0, number);
@@ -85,7 +85,7 @@ var Message = Module(function(event) {
 			charactersRead++;
 			for (var i = 0; i < decoderArray.length; i++) {
 				message.push(decoders[decoderArray[i]](string, charactersRead));
-				charactersRead += List.size(decoderArray[i]);
+				charactersRead += LIST_SIZE(decoderArray[i]);
 			}
 			// when we've finished, fire off an event.
 			this.emit.apply(this, message);
@@ -129,8 +129,8 @@ var Message = Module(function(event) {
 			}
 			while (indexes.length) {
 				var index = indexes.shift();
-				Help.removeIndex(targetQueue, index);
-				message.push(Help.removeIndex(messageQueue, index));
+				HELP_REMOVE_INDEX(targetQueue, index);
+				message.push(HELP_REMOVE_INDEX(messageQueue, index));
 			}
 			server.send(message.join(""), target);
 		}

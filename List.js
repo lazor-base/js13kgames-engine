@@ -50,7 +50,7 @@ var List = Module(function() {
 
 	function putList(array, description) {
 		if (array && !description) {
-			if (!Help.has(oldArrays, array)) {
+			if (!HELP_HAS(oldArrays, array)) {
 				oldArrays.push(array);
 			}
 		} else if (oldArrays[LENGTH] && array && description) {

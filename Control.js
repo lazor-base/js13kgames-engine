@@ -66,7 +66,7 @@ var Control = (function(navigator, window, document) {
 		function startPolling() {
 			if (!polling) {
 				polling = true;
-				Loop.every(15, poll);
+				LOOP_EVERY(15, poll);
 			}
 		}
 
@@ -162,7 +162,7 @@ var Control = (function(navigator, window, document) {
 					}
 					var removed = compare(oldGamePadIds, gamePadIds);
 					var added = compare(gamePadIds, oldGamePadIds);
-					// List.put(oldGamePadIds);
+					// LIST_PUT(oldGamePadIds);
 					oldGamePadIds = gamePadIds;
 					for (var i = 0; i < removed[LENGTH]; i++) {
 						event.emit("disconnect", removed[i]); // pass the gamepad ID
@@ -206,12 +206,12 @@ var Control = (function(navigator, window, document) {
 		}
 
 		function changeKey(type, id, keyCode, value) {
-			var action = Config.matchKey(type, id, keyCode);
+			var action = CONFIG_MATCH_KEY(type, id, keyCode);
 			if (action !== false) { // only proceed if this key is bound to an action
-				var player = Player.find(type, id);
+				var player = PLAYER_FIND(type, id);
 				if (!player) {
 					// player one is registered by the engine, so this would be a new player using a controller.
-					player = Player.register(-1, -1, id);
+					player = PLAYER_REGISTER(-1, -1, id);
 				}
 				if (player.get(Player[LENGTH] + action) !== value) { // we only want to submit a change if the value is different
 					player.set(Player[LENGTH] + action, value);

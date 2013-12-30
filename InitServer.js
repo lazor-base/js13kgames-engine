@@ -14,10 +14,10 @@ var Init = (function(Module, Load) {
 
 	function startGame() {
 		Server.start();
-		GUI.on("ready", function() {
+		GUI_ON("ready", function() {
 			Game.setup();
-			Player.register(0, 0, -1);
-			Player.init();
+			PLAYER_REGISTER(0, 0, -1);
+			PLAYER_INIT();
 			Game.start();
 		});
 	}

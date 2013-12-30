@@ -1,20 +1,3 @@
-<<<<<<< HEAD
-var Game = Module(function(event) {
-	// name: gameclient
-
-	// variables:
-	var test1, test2;
-	// end variables
-
-	// functions
-	function start() {
-		Control.on("change", function(localId, action, value, player) {
-			if (action === MOVEUP) {
-				test1.set(YSPEED, value);
-			}
-			if (action === TURNCW) {
-				test1.set(TURNSPEED, value);
-=======
 var Game = Module(function() {
 	var _canvas, _ctx, stats,
 	_canvasBuffer, _ctxBuffer,
@@ -137,7 +120,6 @@ var Game = Module(function() {
 			} else {
 				axes.set(i + X, normal(i, i - 2, X));
 				axes.set(i + Y, normal(i, i - 2, Y));
->>>>>>> Working lighting implementation
 			}
 		}
 		return axes;
@@ -310,7 +292,7 @@ var Game = Module(function() {
 			var initialValue = box.get(ANGLE);
 			var rotVal = initialValue * timeElapsed;
 			// box.set(ANGLE, initialValue + rotVal);
-			DRAW_SETUP(box, _ctx, updateObjectsInner);
+			Draw.setup(box, _ctx, updateObjectsInner);
 		});
 	}
 
@@ -353,7 +335,7 @@ var Game = Module(function() {
 
 
 	function start() {
-		_canvas = DRAW_CANVAS;
+		_canvas = Draw.canvas;
 		_ctx = _canvas.getContext('2d');
 
 		_canvasBuffer = GUI.make("canvas");
@@ -455,16 +437,9 @@ var Game = Module(function() {
 		_boxId = STRUCT_MAKE(11, "f32");
 		_boxStruct = STRUCT_GET(_boxId);
 	}
-	// end functions
-	
-	// other
-	// end other
-
 	return {
-		// return
 		setup: setup,
 		start: start,
 		ip: "127.0.0.1"
-		// end return
 	};
 });

@@ -3,7 +3,7 @@ var Struct = Module(function(event) {
 	var structId = 0;
 
 	function makeStruct(length, type) {
-		structList[structId++] = List.linked(type, length);
+		structList[structId++] = LIST_LINKED(type, length);
 		return structId;
 	}
 	// function setStruct(id)

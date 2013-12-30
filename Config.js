@@ -44,7 +44,7 @@ var Config = Module(function(event) {
 			hardware[type] = {};
 		}
 		if (!hardware[type][uniqueId]) {
-			hardware[type][uniqueId] = List.get(actions, "s8");
+			hardware[type][uniqueId] = LIST_GET(actions, "s8");
 		}
 	}
 	// end functions

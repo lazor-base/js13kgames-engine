@@ -7,7 +7,7 @@ var Game = Module(function(event) {
 
 	// functions
 	function start() {
-		Control.on("change", function(localId, action, value, player) {
+		CONTROL_ON("change", function(localId, action, value, player) {
 			if (action === MOVEUP) {
 				test1.set(YSPEED, value);
 			}
@@ -29,7 +29,7 @@ var Game = Module(function(event) {
 
 			// console.log(localId, action, value, player)
 		});
-		Loop.every(0, function(deltaTime) {
+		LOOP_EVERY(0, function(deltaTime) {
 			//move
 			// test1.set(TURNSPEED, 10)
 			var turnAngle = test1.get(ANGLE) + test1.get(TURNSPEED);
@@ -46,12 +46,12 @@ var Game = Module(function(event) {
 			test1.set(Y, test1.get(Y) + ySpeed);
 			test1.set(ANGLE, turnAngle);
 			//then physics
-			var result = Physics.test(test1, test2);
+			var result = PHYSICS_TEST(test1, test2);
 			var color = "black";
 			if (result) {
 				color = "red";
 			}
-			List.put(result);
+			LIST_PUT(result);
 			//then draw
 			Draw.clear();
 			Draw.setup(test2, function(context) {
@@ -61,18 +61,18 @@ var Game = Module(function(event) {
 				Draw.rect(test1, color, color);
 			});
 		});
-		Loop.go(true);
+		LOOP_GO(true);
 	}
 
 	function setup() {
-		Config.action(TURNCW, TURNCCW, MOVEUP, MOVEDOWN);
-		Config.input(KEYBOARD, 0);
-		Config.bind(KEYBOARD, 0, TURNCW, "D".charCodeAt(0));
-		Config.bind(KEYBOARD, 0, MOVEUP, "W".charCodeAt(0));
-		Config.bind(KEYBOARD, 0, TURNCCW, "A".charCodeAt(0));
-		Config.bind(KEYBOARD, 0, MOVEDOWN, "S".charCodeAt(0));
-		Control.listen(Draw.canvas, KEYBOARD);
-		test1 = List.get(10, "f32");
+		CONFIG_ACTION(TURNCW, TURNCCW, MOVEUP, MOVEDOWN);
+		CONFIG_INPUT(KEYBOARD, 0);
+		CONFIG_BIND(KEYBOARD, 0, TURNCW, "D".charCodeAt(0));
+		CONFIG_BIND(KEYBOARD, 0, MOVEUP, "W".charCodeAt(0));
+		CONFIG_BIND(KEYBOARD, 0, TURNCCW, "A".charCodeAt(0));
+		CONFIG_BIND(KEYBOARD, 0, MOVEDOWN, "S".charCodeAt(0));
+		CONTROL_LISTEN(Draw.canvas, KEYBOARD);
+		test1 = LIST_GET(10, "f32");
 		test1.set(X, 10);
 		test1.set(Y, 10);
 		test1.set(ANGLE, 0);
@@ -82,7 +82,7 @@ var Game = Module(function(event) {
 		test1.set(YSPEED, 0);
 		test1.set(TURNSPEED, 0);
 
-		test2 = List.get(10, "f32");
+		test2 = LIST_GET(10, "f32");
 		test2.set(X, 170);
 		test2.set(Y, 90);
 		test2.set(ANGLE, 0);

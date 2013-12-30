@@ -8,7 +8,7 @@ var Game = Module(function(event) {
 	// functions
 	function start() {
 
-		Loop.every(0, function(deltaTime) {
+		LOOP_EVERY(0, function(deltaTime) {
 			//move
 			// test1.set(TURNSPEED, 10)
 			var turnAngle = test1.get(ANGLE) + test1.get(TURNSPEED);
@@ -25,17 +25,17 @@ var Game = Module(function(event) {
 			test1.set(Y, test1.get(Y) + ySpeed);
 			test1.set(ANGLE, turnAngle);
 			//then physics
-			var result = Physics.test(test1, test2);
-			List.put(result);
+			var result = PHYSICS_TEST(test1, test2);
+			LIST_PUT(result);
 		});
-		Loop.go(true);
+		LOOP_GO(true);
 		Server.on("connection",function(socket) {
 			console.log("socket connected")
 		})
 	}
 
 	function setup() {
-		test1 = List.get(10, "f32");
+		test1 = LIST_GET(10, "f32");
 		test1.set(X, 10);
 		test1.set(Y, 10);
 		test1.set(ANGLE, 0);
@@ -45,7 +45,7 @@ var Game = Module(function(event) {
 		test1.set(YSPEED, 0);
 		test1.set(TURNSPEED, 0);
 
-		test2 = List.get(10, "f32");
+		test2 = LIST_GET(10, "f32");
 		test2.set(X, 170);
 		test2.set(Y, 90);
 		test2.set(ANGLE, 0);

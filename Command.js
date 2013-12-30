@@ -29,7 +29,7 @@ var Command = Module(function() {
 				executeListeners[i](command, deltaTime, time.now() - command[TIMESTAMP]);
 			}
 			if (!notYetPushed) {
-				history.push(Help.itemRemove(commandList, command));
+				history.push(HELP_ITEM_REMOVE(commandList, command));
 			}
 		} else {
 			return false;

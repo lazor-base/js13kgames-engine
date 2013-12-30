@@ -1,4 +1,4 @@
-module.exports = {
+var options = {
 	parse: {
 		strict: false,
 		filename: process.argv[2]
@@ -27,94 +27,7 @@ module.exports = {
 
 		warnings: true,
 		global_defs: {
-			// player and control data
-			TIMESTAMP: 0,
-			LOCALID: 0,
-			REMOTEID: 1,
-			MOUSE: 2,
-			KEYBOARD: 3,
-			GAMEPAD: 4,
-			PING: 5,
-			ACTIVE: 1,
-			INACTIVE: 0,
-			LEFT_MOUSE: 1,
-			MIDDLE_MOUSE: 2,
-			RIGHT_MOUSE: 3,
-			MOUSE_X: 4,
-			MOUSE_Y: 5,
-			WHEEL_X: 6,
-			WHEEL_Y: 7,
 
-			//controller data
-			CROSS: 0,
-			CIRCLE: 1,
-			TRIANGLE: 2,
-			SQUARE: 3,
-			LEFT_BUTTON: 4,
-			RIGHT_BUTTON: 5,
-			LEFT_TRIGGER: 6,
-			RIGHT_TRIGGER: 7,
-			SELECT: 8,
-			START: 9,
-			LEFT_ANALOGUE_STICK: 10,
-			RIGHT_ANALOGUE_STICK: 11,
-			PAD_TOP: 12,
-			PAD_BOTTOM: 13,
-			PAD_LEFT: 14,
-			PAD_RIGHT: 15,
-
-			LEFT_HORIZONTAL: 0,
-			LEFT_VERTICAL: 1,
-			RIGHT_HORIZONTAL: 2,
-			RIGHT_VERTICAL: 3,
-
-			// entity data
-			X: 0,
-			Y: 1,
-			ANGLE: 2,
-			WIDTH: 3,
-			HEIGHT: 4,
-			XSPEED: 5,
-			YSPEED: 6,
-			TURNSPEED: 7,
-			SIDES: 8,
-
-			// audio data
-			CHUNKID: 0,
-			CHUNKSIZE: 1,
-			FORMAT: 2,
-			SUBCHUNK1ID: 3,
-			SUBCHUNK1SIZE: 4,
-			AUDIOFORMAT: 5,
-			NUMCHANNELS: 6,
-			SAMPLERATE: 7,
-			BYTERATE: 8,
-			BLOCKALIGN: 9,
-			BITSPERSAMPLE: 10,
-			SUBCHUNK2ID: 11,
-			SUBCHUNK2SIZE: 12,
-
-			// game data
-			TURNCW: 0,
-			MOVEUP: 1,
-			TURNCCW: 2,
-			MOVEDOWN: 3,
-
-			// polygon / light.js data
-			VELOCITY_X: 5,
-			VELOCITY_Y: 6,
-			R: 7,
-			G: 8,
-			B: 9,
-			RADIUS: 10,
-			// circle
-			RANGE: 11,
-			FALLOFF: 12,
-			// other
-			TRUE: 1,
-			FALSE: 0,
-			LIGHTING_X:0,
-			LIGHTING_Y:1
 		}
 	},
 	output: {
@@ -134,4 +47,220 @@ module.exports = {
 		preserve_line: false,
 		screw_ie8: false
 	}
+};
+
+var constNames = {
+	// player and control data
+	TIMESTAMP: 0,
+	LOCALID: 0,
+	REMOTEID: 1,
+	MOUSE: 2,
+	KEYBOARD: 3,
+	GAMEPAD: 4,
+	PING: 5,
+	ACTIVE: 1,
+	INACTIVE: 0,
+	LEFT_MOUSE: 1,
+	MIDDLE_MOUSE: 2,
+	RIGHT_MOUSE: 3,
+	MOUSE_X: 4,
+	MOUSE_Y: 5,
+	WHEEL_X: 6,
+	WHEEL_Y: 7,
+
+	//controller data
+	CROSS: 0,
+	CIRCLE: 1,
+	TRIANGLE: 2,
+	SQUARE: 3,
+	LEFT_BUTTON: 4,
+	RIGHT_BUTTON: 5,
+	LEFT_TRIGGER: 6,
+	RIGHT_TRIGGER: 7,
+	SELECT: 8,
+	START: 9,
+	LEFT_ANALOGUE_STICK: 10,
+	RIGHT_ANALOGUE_STICK: 11,
+	PAD_TOP: 12,
+	PAD_BOTTOM: 13,
+	PAD_LEFT: 14,
+	PAD_RIGHT: 15,
+
+	LEFT_HORIZONTAL: 0,
+	LEFT_VERTICAL: 1,
+	RIGHT_HORIZONTAL: 2,
+	RIGHT_VERTICAL: 3,
+
+	// entity data
+	X: 0,
+	Y: 1,
+	ANGLE: 2,
+	WIDTH: 3,
+	HEIGHT: 4,
+	XSPEED: 5,
+	YSPEED: 6,
+	TURNSPEED: 7,
+	SIDES: 8,
+
+	// audio data
+	CHUNKID: 0,
+	CHUNKSIZE: 1,
+	FORMAT: 2,
+	SUBCHUNK1ID: 3,
+	SUBCHUNK1SIZE: 4,
+	AUDIOFORMAT: 5,
+	NUMCHANNELS: 6,
+	SAMPLERATE: 7,
+	BYTERATE: 8,
+	BLOCKALIGN: 9,
+	BITSPERSAMPLE: 10,
+	SUBCHUNK2ID: 11,
+	SUBCHUNK2SIZE: 12,
+
+	// game data
+	TURNCW: 0,
+	MOVEUP: 1,
+	TURNCCW: 2,
+	MOVEDOWN: 3,
+
+	// polygon / light.js data
+	VELOCITY_X: 5,
+	VELOCITY_Y: 6,
+	R: 7,
+	G: 8,
+	B: 9,
+	RADIUS: 10,
+	// circle
+	RANGE: 11,
+	FALLOFF: 12,
+	// other
+	TRUE: 1,
+	FALSE: 0,
+	LIGHTING_X: 0,
+	LIGHTING_Y: 1
+};
+
+var engineNames = {
+	CONFIG_INPUT:"input",
+	CONFIG_ACTION:"action",
+	CONFIG_MATCH_KEY:"matchKey",
+	CONFIG_BINDING:"binding",
+	CONFIG_UNBIND:"unbind",
+	CONFIG_BIND:"bind",
+	CONTROL_PREVENT_DEFAULT:"preventDefault",
+	CONTROL_ON:"event.on",
+	CONTROL_EMIT:"event.on",
+	CONTROL_LISTEN:"listen",
+	CONTROL_INIT:"initControl",
+	GUI_TEMPLATE:"template",
+	GUI_REMOVE:"removeGUI",
+	GUI_PUT:"putGUI",
+	GUI_GET:"getGUI",
+	GUI_MAKE:"makeGUI",
+	GUI_SET:"setGUI",
+	GUI_ON:"event.on",
+	GUI_EMIT:"event.on",
+	DRAW_CANVAS:"canvas",
+	DRAW_CLEAR:"clear",
+	DRAW_POLY:"poly",
+	DRAW_SETUP:"setupDraw",
+	HELP_ITEM_REMOVE:"itemRemove",
+	HELP_INDEX_REMOVE:"indexRemove",
+	HELP_HAS:"has",
+	HELP_SPLICE:"splice",
+	LIST_SIZE:"size",
+	LIST_GET:"getList",
+	LIST_PUT:"putList",
+	LIST_LINKED:"linked",
+	LOOP_GO: "go",
+	LOOP_EVERY: "every",
+	LOOP_ON: "event.on",
+	LOOP_EMIT: "event.emit",
+	PHYSICS_TEST:"test",
+	PHYSICS_GET_VERTICES:"getVertices",
+	PLAYER_LENGTH:"length",
+	PLAYER_REGISTER:"register",
+	PLAYER_FIND:"find",
+	PLAYER_INIT:"initPlayer",
+	PLAYER_IS_LOCAL:"isLocal",
+	PLAYER_TOGGLE_PLAYER:"togglePlayer",
+	RIFFWAVE_LENGTH:"length",
+	RIFFWAVE_GET:"get",
+	RIFFWAVE_MAKE:"make",
+	STRUCT_MAKE:"makeStruct",
+	STRUCT_GET:"getStruct",
+	TIME_NOW:"nowTime",
+	TIME_MICRO:"micro",
+};
+
+var singleNames = {
+	CONFIG_INPUT:"Config.name",
+	CONFIG_ACTION:"Config.action",
+	CONFIG_MATCH_KEY:"Config.matchKey",
+	CONFIG_BINDING:"Config.binding",
+	CONFIG_UNBIND:"Config.unbind",
+	CONFIG_BIND:"Config.bind",
+	CONTROL_PREVENT_DEFAULT:"Control.preventDefault",
+	CONTROL_ON:"Control.on",
+	CONTROL_EMIT:"Control.emit",
+	CONTROL_LISTEN:"Control.listen",
+	CONTROL_INIT:"Control.init",
+	GUI_TEMPLATE:"GUI.template",
+	GUI_REMOVE:"GUI.remove",
+	GUI_PUT:"GUI.put",
+	GUI_GET:"GUI.get",
+	GUI_MAKE:"GUI.make",
+	GUI_SET:"GUI.set",
+	GUI_ON:"GUI.on",
+	GUI_EMIT:"GUI.emit",
+	DRAW_CANVAS:"Draw.canvas",
+	DRAW_CLEAR:"Draw.clear",
+	DRAW_POLY:"Draw.poly",
+	DRAW_SETUP:"Draw.setup",
+	HELP_ITEM_REMOVE:"Help.itemRemove",
+	HELP_INDEX_REMOVE:"Help.indexRemove",
+	HELP_HAS:"Help.has",
+	HELP_SPLICE:"Help.splice",
+	LIST_SIZE:"List.size",
+	LIST_GET:"List.get",
+	LIST_PUT:"List.put",
+	LIST_LINKED:"List.linked",
+	LOOP_GO: "Loop.go",
+	LOOP_EVERY: "Loop.every",
+	LOOP_ON: "Loop.on",
+	LOOP_EMIT: "Loop.emit",
+	PHYSICS_TEST:"Physics.test",
+	PHYSICS_GET_VERTICES:"Physics.getVertices",
+	PLAYER_LENGTH:"Player.length",
+	PLAYER_REGISTER:"Player.register",
+	PLAYER_FIND:"Player.find",
+	PLAYER_INIT:"Player.init",
+	PLAYER_IS_LOCAL:"Player.isLocal",
+	PLAYER_TOGGLE_PLAYER:"Player.togglePlayer",
+	RIFFWAVE_LENGTH:"RiffWave.length",
+	RIFFWAVE_GET:"RiffWave.get",
+	RIFFWAVE_MAKE:"RiffWave.make",
+	STRUCT_MAKE:"Struct.make",
+	STRUCT_GET:"Struct.get",
+	TIME_NOW:"Time.now",
+	TIME_MICRO:"Time.micro",
+};
+
+for (var attr in engineNames) {
+	options.compress.global_defs[attr] = engineNames[attr];
+}
+
+for (var attr in singleNames) {
+	options.compress.global_defs[attr] = singleNames[attr];
+}
+
+for (var attr in constNames) {
+	options.compress.global_defs[attr] = constNames[attr];
+}
+
+module.exports = {
+	options:options,
+	singleNames:singleNames,
+	engineNames:engineNames,
+	constNames:constNames
 };

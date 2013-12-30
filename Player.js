@@ -3,7 +3,7 @@ var Player = Module(function(event) {
 	
 	// variables
 	var uniqueId = 0;
-	var players = List.linked();
+	var players = LIST_LINKED();
 
 	var playerOneCanUseController = false;
 	var totalControllers = 0;
@@ -13,7 +13,7 @@ var Player = Module(function(event) {
 
 	// functions
 	function register(mouse, keyboard, gamepad) {
-		var player = List.get(6 + Config.length, "s8");
+		var player = LIST_GET(6 + Config.length, "s8");
 		player.set(LOCALID, uniqueId);
 		player.set(REMOTEID, -1);
 		player.set(PING, 30);
@@ -53,7 +53,7 @@ var Player = Module(function(event) {
 		if (gamePadId === -1) {
 			return true;
 		}
-		return Help.has(usedGamePads, gamePadId);
+		return HELP_HAS(usedGamePads, gamePadId);
 	}
 
 	function disconnectPlayer(gamePadId) {
@@ -65,7 +65,7 @@ var Player = Module(function(event) {
 		emit("disconnect", player);
 		player.remove();
 		if (gamePadInUse(gamePadId)) {
-			Help.itemRemove(usedGamePads, gamePadId); // remove the gamepad id from used gamepads
+			HELP_ITEM_REMOVE(usedGamePads, gamePadId); // remove the gamepad id from used gamepads
 		}
 	}
 
@@ -94,7 +94,7 @@ var Player = Module(function(event) {
 		} else {
 			// reset back to keyboard
 			if (gamePadInUse(playerOne.get(GAMEPAD))) {
-				Help.itemRemove(usedGamePads, playerOne.gamePadId); // remove the gamepad id from used gamepads
+				HELP_ITEM_REMOVE(usedGamePads, playerOne.gamePadId); // remove the gamepad id from used gamepads
 			}
 			playerOne.set(GAMEPAD, -1);
 			playerOneUsingGamepad = false;
@@ -133,8 +133,8 @@ var Player = Module(function(event) {
 
 	function initPlayer() {
 		playerOneCanUseController = unusedControllers();
-		Control.on("connect", onGamePadConnect);
-		Control.on("disconnect", onGamePadDisconnect);
+		CONTROL_ON("connect", onGamePadConnect);
+		CONTROL_ON("disconnect", onGamePadDisconnect);
 	}
 	// end functions
 

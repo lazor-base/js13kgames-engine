@@ -3,7 +3,23 @@
 // variables
 var UglifyJS = require("uglify-js");
 var fs = require("fs");
-var options = require("./options.js");
+var config = require("./options.js");
+
+
+function merge_options(obj1, obj2) {
+	var obj3 = {};
+	for (var attrname in obj1) {
+		obj3[attrname] = obj1[attrname];
+	}
+	for (var attrname in obj2) {
+		obj3[attrname] = obj2[attrname];
+	}
+	return obj3;
+}
+
+var options = merge_options(config, constNames);
+// var options = merge_options(config, engineNames);
+// var options = merge_options(config, singleNames);
 
 var Q = [];
 var result;

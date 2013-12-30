@@ -10,7 +10,7 @@ var Physics = Module(function(event) {
 =======
 var Physics = Module(function() {
 	var axes = [];
-	var numbers = List.get(2,"f32");
+	var numbers = LIST_GET(2,"f32");
 	numbers.set(0,9e9);
 	numbers.set(1,Math.PI/180);
 >>>>>>> Working lighting implementation
@@ -29,12 +29,12 @@ var Physics = Module(function() {
 	}
 
 	function getf32List(size) {
-		return List.get(size, "f32");
+		return LIST_GET(size, "f32");
 	}
 
 	function putInList() {
 		for (var i = 0; i < arguments.length; i++) {
-			List.put(arguments[i]);
+			LIST_PUT(arguments[i]);
 		}
 	}
 

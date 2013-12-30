@@ -155,7 +155,7 @@
 				hardware[type] = {};
 			}
 			if (!hardware[type][uniqueId]) {
-				hardware[type][uniqueId] = List.get(actions, "s8");
+				hardware[type][uniqueId] = LIST_GET(actions, "s8");
 			}
 		}
 
@@ -209,7 +209,7 @@
 		function startPolling() {
 			if (!polling) {
 				polling = true;
-				Loop.every(15, poll);
+				LOOP_EVERY(15, poll);
 			}
 		}
 
@@ -304,7 +304,7 @@
 					}
 					var removed = compare(oldGamePadIds, gamePadIds);
 					var added = compare(gamePadIds, oldGamePadIds);
-					// List.put(oldGamePadIds);
+					// LIST_PUT(oldGamePadIds);
 					oldGamePadIds = gamePadIds;
 					for (var i = 0; i < removed[LENGTH]; i++) {
 						event.emit("disconnect", removed[i]); // pass the gamepad ID
@@ -350,10 +350,10 @@
 		function changeKey(type, id, keyCode, value) {
 			var action = matchKey(type, id, keyCode);
 			if (action !== false) { // only proceed if this key is bound to an action
-				var player = Player.find(type, id);
+				var player = PLAYER_FIND(type, id);
 				if (!player) {
 					// player one is registered by the engine, so this would be a new player using a controller.
-					player = Player.register(-1, -1, id);
+					player = PLAYER_REGISTER(-1, -1, id);
 				}
 				if (player.get(Player[LENGTH] + action) !== value) { // we only want to submit a change if the value is different
 					player.set(Player[LENGTH] + action, value);
@@ -549,7 +549,7 @@
 
 		function putList(array, description) {
 			if (array && !description) {
-				if (!Help.has(oldArrays, array)) {
+				if (!HELP_HAS(oldArrays, array)) {
 					oldArrays.push(array);
 				}
 			} else if (oldArrays[LENGTH] && array && description) {
@@ -734,7 +734,7 @@
 		function run() {
 			if (stop === false) {
 				lastTick = currentTick;
-				currentTick = Time.micro();
+				currentTick = TIME_MICRO();
 				for (var i = 0; i < intervals.length; i++) {
 					if (stop) {
 						return true;
@@ -753,7 +753,7 @@
 		function every(interval, callback) {
 			if (intervals.indexOf("" + interval) === -1) {
 				intervals.push("" + interval);
-				intervalTicks.push(Time.micro());
+				intervalTicks.push(TIME_MICRO());
 			}
 			event.on("" + interval, callback);
 		}
@@ -934,7 +934,7 @@
 		// player
 
 		function register(mouse, keyboard, gamepad) {
-			var player = List.get(6 + actions, "s8");
+			var player = LIST_GET(6 + actions, "s8");
 			player.set(LOCALID, uniqueId);
 			player.set(REMOTEID, -1);
 			player.set(PING, 30);
@@ -1178,7 +1178,7 @@
 
 		function makeStruct(length, type) {
 			structId++;
-			structList[structId] = List.linked(type, length);
+			structList[structId] = LIST_LINKED(type, length);
 			return structId;
 		}
 		// function setStruct(id)
@@ -1300,7 +1300,7 @@
 			micro: micro
 		};
 
-		GUI.on("ready", function() {
+		GUI_ON("ready", function() {
 			Game.setup();
 			register(0, 0, -1);
 			initPlayer();
