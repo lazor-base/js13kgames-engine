@@ -1,10 +1,16 @@
 var Loop = Module(function(event) {
+	// name: loop
+
+	// variables
 	var stop = true;
 	var currentTick = 0;
 	var lastTick = 0;
 	var intervals = [];
 	var intervalTicks = [];
 	var loop;
+	// end variables
+
+	// functions
 	function nextFrame(callback) {
 		if (typeof requestAnimationFrame === "function") {
 			return requestAnimationFrame(callback);
@@ -46,11 +52,18 @@ var Loop = Module(function(event) {
 		}
 		event.on("" + interval, callback);
 	}
+	// end functions
+
+	// other
+	// end other
+
 	return {
+		// return
 		go: go,
 		every: every,
 		on: event.on,
 		emit: event.emit,
+		// end return
 	};
 });
 if (typeof module !== "undefined") {

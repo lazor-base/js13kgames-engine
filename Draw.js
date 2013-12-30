@@ -1,5 +1,11 @@
 var Draw = Module(function(event) {
+	// name: draw
+
+	// variables
 	var canvas, context;
+	// end variables
+
+	// functions
 	GUI.on("ready", function() {
 		canvas = GUI.make("canvas");
 		canvas.width = 900;
@@ -41,9 +47,16 @@ var Draw = Module(function(event) {
 	function clear() {
 		context.clearRect(0, 0, canvas.width, canvas.height);
 	}
+	// end functions
+
+	// other
+	// end other
+
 	return {
+		// return
 		clear: clear,
 		poly: poly,
 		setup: setupDraw
+		// end return
 	};
 });

@@ -1,4 +1,7 @@
+// name: list
+
 var List = Module(function() {
+	// variables
 	var NULL = null;
 	var created = 0;
 	var LENGTH = "length";
@@ -15,6 +18,7 @@ var List = Module(function() {
 		f32: Float32Array,
 		f64: Float64Array
 	};
+	// end variables
 
 	/**
 	 * Helper function to get byte size of each array, since the text is lengthy.
@@ -26,6 +30,7 @@ var List = Module(function() {
 	 * @returns {Number}
 	 */
 
+	 // functions
 	function size(description) {
 		return types[description].BYTES_PER_ELEMENT;
 	}
@@ -202,12 +207,18 @@ var List = Module(function() {
 			last: NULL
 		};
 	}
+	// end functions
+
+	// other
+	// end other
 
 	return {
+		// return
 		size: size,
 		get: getList,
 		put: putList,
 		linked: linked
+		// end return
 	};
 });
 if (typeof module !== "undefined") {

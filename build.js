@@ -1,10 +1,15 @@
+// name: build
+
+// variables
 var UglifyJS = require("uglify-js");
 var fs = require("fs");
 var options = require("./options.js");
 
-
 var Q = [];
 var result;
+// end variables
+
+// functions
 for (i = 1000; --i; i - 10 && i - 13 && i - 34 && i - 39 && i - 92 && Q.push(String.fromCharCode(i)));
 var Minify = function(code, s) {
 	i = s = code.replace(/([\r\n]|^)\s*\/\/.*|[\r\n]+\s*/g, '').replace(/\\/g, '\\\\'), X = B = s.length / 2, O = m = '';
@@ -109,3 +114,10 @@ with(UglifyJS) {
 		}
 	});
 }
+// end functions
+
+// other
+// end other
+
+// return
+// end return

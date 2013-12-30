@@ -1,4 +1,7 @@
 var Player = Module(function(event) {
+	// name: player
+	
+	// variables
 	var uniqueId = 0;
 	var players = List.linked();
 
@@ -6,7 +9,9 @@ var Player = Module(function(event) {
 	var totalControllers = 0;
 	var playerOneUsingGamepad = false;
 	var usedGamePads = [];
+	// end variables
 
+	// functions
 	function register(mouse, keyboard, gamepad) {
 		var player = List.get(6 + Config.length, "s8");
 		player.set(LOCALID, uniqueId);
@@ -131,14 +136,20 @@ var Player = Module(function(event) {
 		Control.on("connect", onGamePadConnect);
 		Control.on("disconnect", onGamePadDisconnect);
 	}
+	// end functions
+
+	// other
+	// end other
 
 	return {
+		// return
 		length: 6,
 		register: register,
 		find: find,
 		init: initPlayer,
 		isLocal: isLocal,
 		togglePlayer: togglePlayer,
+		// end return
 	};
 });
 if (typeof module !== "undefined") {

@@ -1,8 +1,13 @@
 var Config = Module(function(event) {
+	// name: config
+
+	// variables
 	var hardware = {};
 	var actions = 0;
 	var actionNames = [];
+	// end variables
 
+	// functions
 	function bind(type, id, action, keyCode) {
 		var uniqueId = "" + type + id;
 		hardware[type][uniqueId].set(action, keyCode);
@@ -42,13 +47,20 @@ var Config = Module(function(event) {
 			hardware[type][uniqueId] = List.get(actions, "s8");
 		}
 	}
+	// end functions
+
+	// other
+	// end other
+
 	return {
+		// return
 		input: input,
 		action: action,
 		matchKey: matchKey,
 		binding: binding,
 		unbind: unbind,
 		bind: bind
+		// end return
 	};
 });
 if (typeof module !== "undefined") {

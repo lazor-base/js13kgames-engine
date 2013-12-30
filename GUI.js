@@ -1,7 +1,11 @@
 var GUI = (function(window, document) {
+	// name: gui
 	return Module(function(event) {
+		// variables
 		var isReady = false;
+		// end variables
 
+		// functions
 		var test = function() {
 			if (!isReady) {
 				isReady = document.readyState === "complete";
@@ -48,9 +52,13 @@ var GUI = (function(window, document) {
 			}
 			return result;
 		}
+		// end functions
 
+		// other
+		// end other
 
 		return {
+			// return
 			template: template,
 			remove: removeGUI,
 			put: putGUI,
@@ -59,6 +67,7 @@ var GUI = (function(window, document) {
 			set: setGUI,
 			on: event.on,
 			emit: event.emit
+			// endreturn
 		};
 	});
 }(window, document));

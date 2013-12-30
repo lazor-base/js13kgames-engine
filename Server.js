@@ -1,6 +1,11 @@
 var Server = Module(function(event) {
-	var serverSocket;
+	// name: server
 
+	// variables
+	var serverSocket;
+	// end variables
+
+	// functions
 	function start() {
 		process.chdir("server");
 		var url = require('url');
@@ -88,16 +93,20 @@ var Server = Module(function(event) {
 	function send(messageString, target) {
 		target.emit(messageString);
 	}
+	// end functions
 
-
+	// other
+	// end other
 
 	return {
+		// return
 		send: send,
 		remote:null,
 		connect: connect,
 		on: event.on,
 		emit: event.emit,
 		start: start
+		// end return
 	};
 });
 if (typeof module !== "undefined") {

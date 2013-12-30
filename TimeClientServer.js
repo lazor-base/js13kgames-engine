@@ -1,8 +1,13 @@
 var Time = Module(function(event) {
+	// name: timeclientserver
+
+	// variables
 	var now = Date.now;
 	var serverTime = now();
 	var timeDifference = 0;
+	// end variabes
 
+	// functions
 	function nowTime() {
 		return now() - timeDifference;
 	}
@@ -23,12 +28,19 @@ var Time = Module(function(event) {
 			};
 		}
 	}())
+	// end functions
+
+	// other
+	// end other
+
 	return {
+		// return
 		now: nowTime,
 		parse: parse,
 		micro: micro,
 		set serverTime(time) {
 			serverTime = time;
 		}
+		// end return
 	};
 });

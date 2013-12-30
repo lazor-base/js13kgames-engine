@@ -1,8 +1,13 @@
 var Help = (function() {
+	// name: help
+
+	// variables
 	var LENGTH = "length";
 	var array = [];
 	var shift = array.shift;
 	var push = array.push;
+	// end variables
+
 	/**
 	 * A replacement for Array.splice which doesnt return an array if there is only one item.
 	 *
@@ -10,6 +15,8 @@ var Help = (function() {
 	 *
 	 * @returns {Function}
 	 */
+
+	 // functions
 	var Splice = (function() {
 		var helper = [];
 		var returnItems = [];
@@ -56,6 +63,13 @@ var Help = (function() {
 		has: has,
 		splice: Splice
 	}
+	// end functions
+
+	// other
+	// end other
+
+	// return
+	// end return
 }());
 if (typeof module !== "undefined") {
 	module.exports = Help;

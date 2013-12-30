@@ -6,6 +6,12 @@
  * @param  {Function} fn Uninitialized function to convert into a module.
  */
 
+// name: module
+
+// variables
+// end variables
+
+// functions
 function Module(fn) {
 	if (typeof global !== "undefined") {
 		return module.exports = fn(new(require("events").EventEmitter));
@@ -32,6 +38,13 @@ function Module(fn) {
 		});
 	}
 }
+// end functions
+
+// other
+// end other
+
+// return
+// end return
 if (typeof module !== "undefined") {
 	module.exports = Module;
 }

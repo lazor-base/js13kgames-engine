@@ -1,6 +1,11 @@
 var RiffWave = Module(function(event) {
-	var oldData = [];
+	// name: riffwave
 
+	// variables
+	var oldData = [];
+	// end variables
+
+	// functions
 	var FastBase64 = (function() {
 
 		var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
@@ -113,9 +118,16 @@ var RiffWave = Module(function(event) {
 		// length of data needed to last for 'ms' length
 		return (ms/1000)*sampleRate;
 	}
+	// end functions
+
+	// other
+	// end others
+
 	return {
+		// return
 		length:length,
 		get: get,
 		make: make
+		// end return
 	};
 });

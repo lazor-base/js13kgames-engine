@@ -1,6 +1,11 @@
 var Game = Module(function(event) {
-	var test1, test2;
+	// name: gameclientserver
 
+	// variables
+	var test1, test2;
+	// end variables
+
+	// functions
 	function start() {
 		Control.on("change", function(localId, action, value, player) {
 			if (action === MOVEUP) {
@@ -88,9 +93,16 @@ var Game = Module(function(event) {
 		test2.set(TURNSPEED, 0);
 		document.createElement("canvas");
 	}
+	// end functions
+
+	// other
+	// end other
+
 	return {
+		// return
 		setup: setup,
 		start: start,
 		ip: "127.0.0.1"
+		// end return
 	};
 });

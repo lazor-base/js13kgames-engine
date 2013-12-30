@@ -1,5 +1,8 @@
 var Control = (function(navigator, window, document) {
+	// name: control
+
 	return Module(function(event) {
+		// variables
 		var addEventListener = "addEventListener";
 		var LENGTH = "length";
 		var disabled = false;
@@ -12,7 +15,9 @@ var Control = (function(navigator, window, document) {
 		var oldGamePadIds = [];
 		var gamePadIds = [];
 		var listenNode;
+		// end variables
 
+		// functions
 		function eventType(type) {
 			if (type.indexOf("mouse") > -1) {
 				return MOUSE;
@@ -229,13 +234,19 @@ var Control = (function(navigator, window, document) {
 				document[addEventListener]("keyup", releaseEvent);
 			}
 		}
+		// end functions 
+
+		// other
+		// end other
 
 		return {
+			// return
 			preventDefault: preventDefault,
 			on: event.on,
 			emit: event.emit,
 			listen: listen,
 			init: initControl
+			// end return
 		};
 	});
 }(navigator, window, document));

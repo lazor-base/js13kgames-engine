@@ -1,6 +1,11 @@
 var Time = Module(function(event) {
-	var now = Date.now;
+	// name: timeclient
 
+	// variables
+	var now = Date.now;
+	// variables
+
+	// functions
 	function nowTime() {
 		return now();
 	}
@@ -19,8 +24,15 @@ var Time = Module(function(event) {
 			};
 		}
 	}())
+	// end functions
+
+	// other
+	// end other
+
 	return {
+		// return
 		now: nowTime,
 		micro: micro
+		// end return
 	};
 });

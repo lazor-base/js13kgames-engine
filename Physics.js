@@ -1,9 +1,13 @@
 var Physics = Module(function(event) {
+	// name: physics
+
+	// variables
 	var axes = [];
 	var smallest = {};
 	var overlap = 9e9;
+	// end variables
 
-
+	// functions
 	function dot(vector1, vector2) {
 		return (getValue(vector1, X) * getValue(vector2, X)) + (getValue(vector1, Y) * getValue(vector2, Y));
 	}
@@ -177,10 +181,16 @@ var Physics = Module(function(event) {
 		putInList(vector1, vector2);
 		return result;
 	}
+	// end functions
+
+	// other
+	// end other
 
 	return {
+		// return
 		test: test,
 		getVertices: getVertices
+		// end return
 	}
 });
 if (typeof module !== "undefined") {

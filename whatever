@@ -1,0 +1,9 @@
+//\sname:\s([a-z]*)
+
+//\s*variables([\S\n\r\D]*)//\s*end\s*variables
+
+//\s*functions([\S\n\r\D]*)//\s*end\s*functions
+
+//\s*other([\S\n\r\D]*)//\s*end\s*other
+
+//\s*return([\S\n\r\D]*)//\s*end\s*return
