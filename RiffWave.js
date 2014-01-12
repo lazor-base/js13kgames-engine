@@ -1,5 +1,4 @@
 var RiffWave = Module(function(event) {
-	// name: riffwave
 
 	// variables
 	var oldData = [];

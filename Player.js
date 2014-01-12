@@ -1,6 +1,8 @@
 var Player = Module(function(event) {
-	// name: player
-	
+	// name: Player
+	// target: Client
+	// filenames: Engine
+
 	// variables
 	var uniqueId = 0;
 	var players = LIST_LINKED();
@@ -13,7 +15,7 @@ var Player = Module(function(event) {
 
 	// functions
 	function register(mouse, keyboard, gamepad) {
-		var player = LIST_GET(6 + Config.length, "s8");
+		var player = LIST_GET(6 + CONFIG_LENGTH, "s8");
 		player.set(LOCALID, uniqueId);
 		player.set(REMOTEID, -1);
 		player.set(PING, 30);
@@ -33,14 +35,14 @@ var Player = Module(function(event) {
 		}) || false;
 	}
 
-	function onGamePadConnect(gamePadId) {
-		console.log("gamepad connected")
+	function onGamePadConnect() {
+		console.log("gamepad connected");
 		totalControllers++;
 		playerOneCanUseController = unusedControllers();
 	}
 
 	function onGamePadDisconnect(gamePadId) {
-		console.log("gamepad disconnected")
+		console.log("gamepad disconnected");
 		totalControllers--;
 		if (gamePadInUse(gamePadId)) {
 			// gamepad in use, disconnect that user.
@@ -81,8 +83,8 @@ var Player = Module(function(event) {
 		var playerOne = find(KEYBOARD, 0);
 		if (playerOne.same(GAMEPAD, -1)) {
 			// if player one isnt using a gamepad yet, lets find him one.
-			for (var i = 0; i < Control.gamepads.length; i++) {
-				var gamepad = Control.gamepads[i].index;
+			for (var i = 0; i < CONTROL_GAMEPADS.length; i++) {
+				var gamepad = CONTROL_GAMEPADS[i].index;
 				if (!gamePadInUse(gamepad)) {
 					playerOne.set(GAMEPAD, gamepad);
 					usedGamePads.push(gamepad); // reserve this gamepad as used.

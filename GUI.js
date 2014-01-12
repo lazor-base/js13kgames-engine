@@ -1,21 +1,13 @@
-var GUI = (function(window, document) {
-	// name: gui
+var GUI = (function(document) {
+	// name: GUI
+	// target: Client
+	// filenames: Engine
 	return Module(function(event) {
 		// variables
 		var isReady = false;
 		// end variables
 
 		// functions
-		var test = function() {
-			if (!isReady) {
-				isReady = document.readyState === "complete";
-				setTimeout(test, 10);
-			} else {
-				event.emit("ready");
-			}
-		};
-		setTimeout(test, 10);
-
 		function getGUI(id) {
 			return document.getElementById(id);
 		}
@@ -45,8 +37,8 @@ var GUI = (function(window, document) {
 			node.parentNode.removeChild(node);
 		}
 
-		function template(template, vars) {
-			var result = template;
+		function template(templateString, vars) {
+			var result = templateString;
 			for (var attr in vars) {
 				result = result.replace(new RegExp("{{" + attr + "}}", 'g'), vars[attr]);
 			}
@@ -55,6 +47,15 @@ var GUI = (function(window, document) {
 		// end functions
 
 		// other
+		var testReadyState = function() {
+			if (!isReady) {
+				isReady = document.readyState === "complete";
+				setTimeout(testReadyState, 10);
+			} else {
+				event.emit("ready");
+			}
+		};
+		setTimeout(testReadyState, 10);
 		// end other
 
 		return {
@@ -70,4 +71,4 @@ var GUI = (function(window, document) {
 			// endreturn
 		};
 	});
-}(window, document));
+}(document));

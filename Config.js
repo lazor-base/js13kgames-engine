@@ -1,10 +1,11 @@
-var Config = Module(function(event) {
-	// name: config
+var Config = Module(function() {
+	// name: Config
+	// targets: Client
+	// filenames: Engine
 
 	// variables
 	var hardware = {};
 	var actions = 0;
-	var actionNames = [];
 	// end variables
 
 	// functions
@@ -17,7 +18,7 @@ var Config = Module(function(event) {
 		bind(type, id, action, -1);
 	}
 
-	function binding(type, id, action) {
+	function binding(type, uniqueId, action) {
 		return hardware[type][uniqueId].get(action);
 	}
 
@@ -54,6 +55,9 @@ var Config = Module(function(event) {
 
 	return {
 		// return
+		get length() {
+			return actions;
+		},
 		input: input,
 		action: action,
 		matchKey: matchKey,

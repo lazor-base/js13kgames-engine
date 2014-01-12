@@ -1,6 +1,3 @@
-// name : initclientserver
-
-// variables
 var Module = Module || null;
 var Load = Load || null;
 var Init = (function(Module, Load) {
@@ -19,9 +16,7 @@ var Init = (function(Module, Load) {
 	var _GUI = "GUI";
 	var DRAW = "Draw";
 	var RIFFWAVE = "RiffWave";
-// end variables
 
-// functions
 	function startGame() {
 		GUI_ON("ready", function() {
 			Game.setup();
@@ -101,13 +96,7 @@ var Init = (function(Module, Load) {
 		fn.remote = remote;
 		return fn;
 	});
-// end functions
 
-// other
-// end other
-
-// return
-// end return
 	Load(SERVER, GAME, CONFIG, CONTROL, PLAYER, _GUI, DRAW, RIFFWAVE);
 	Load.on("loadLocal", function() {
 		Server.connect(Game.ip);

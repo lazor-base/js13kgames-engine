@@ -1,11 +1,7 @@
 var Game = Module(function(event) {
-	// name: gameserver
 
-	// variables
 	var test1, test2;
-	// end variables
 
-	// functions
 	function start() {
 
 		LOOP_EVERY(0, function(deltaTime) {
@@ -55,17 +51,12 @@ var Game = Module(function(event) {
 		test2.set(YSPEED, 0);
 		test2.set(TURNSPEED, 0);
 	}
-	// end functions
 
-	// other
-	// end other
 
 	return {
-		// return
 		setup: setup,
 		start: start,
 		ip: ""
-		// return
 	};
 });
 if (typeof module !== "undefined") {

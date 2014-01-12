@@ -1,13 +1,9 @@
 var Command = Module(function() {
-	// name: command
 
-	// variables
 	var commandList = [];
 	var history = [];
 	var executeListeners = [];
-	// end variables
 
-	// functions
 	function forEach(fn) {
 		for (var i = 0; i < commandList.length; i++) {
 			fn(commandList[i], i, commandList);
@@ -46,18 +42,12 @@ var Command = Module(function() {
 	function onExecute(fn) {
 		executeListeners.push(fn);
 	}
-	// end functions
-
-	// other
-	// end other
 
 	return {
-		// return
 		forEach: forEach,
 		process: process,
 		onExecute: onExecute,
 		push: push
-		// end return
 	};
 });
 if (typeof module !== "undefined") {

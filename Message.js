@@ -1,9 +1,7 @@
 // requires server.js and typedList.js
 
 var Message = Module(function(event) {
-	// name: message
 
-	// variables
 	var messageQueue = [];
 	var targetQueue = [];
 	var message = [];
@@ -27,9 +25,7 @@ var Message = Module(function(event) {
 		encoders[type] = encoder(type);
 		decoders[type] = decoder(type);
 	}
-	// end variables
 
-	// functions
 	function splice(array, start, howMany) {
 		return Array.prototype.splice.call(array, start, howMany);
 	}
@@ -150,20 +146,15 @@ var Message = Module(function(event) {
 		console.log(string)
 		decode(string);
 	}
-	// end functions
 
-	// other
-	// end other
 
 	return {
-		// return
 		register: register,
 		send: send,
 		dock: dock,
 		ship: ship,
 		on: event.on,
 		emit: event.emit,
-		// end return
 	};
 });
 if (typeof module !== "undefined") {

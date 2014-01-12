@@ -1,6 +1,3 @@
-// name initclient
-
-// variables
 var Module = Module || null;
 var Load = Load || null;
 var Init = (function(Module, Load) {
@@ -17,9 +14,7 @@ var Init = (function(Module, Load) {
 	var _GUI = "GUI";
 	var DRAW = "Draw";
 	var RIFFWAVE = "RiffWave";
-// end variables
 
-// functions
 	function startGame() {
 		GUI_ON("ready", function() {
 			Game.setup();
@@ -83,14 +78,6 @@ var Init = (function(Module, Load) {
 		fn.emit = event.emit;
 		return fn;
 	});
-
-	// end functions
-
-	// other
-	// end other
-
-	// return
-	// end return
 
 	Load(COMMAND, CONFIG, CONTROL, ENTITY, GAME, LIST, LOOP, PLAYER, TIME, PHYSICS, _GUI, DRAW, RIFFWAVE);
 	Load.on("loadLocal", startGame);

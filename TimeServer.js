@@ -1,12 +1,8 @@
 var Time = Module(function(event) {
-	// name: timeserver
 
-	// variables
 	var now = Date.now;
 	var serverTime = now();
-	// end variables
 
-	// functions
 	function nowTime() {
 		return now();
 	}
@@ -37,16 +33,11 @@ var Time = Module(function(event) {
 			};
 		}
 	}())
-	// end functions
 
-	// other
-	// end other
 
 	return {
-		// return
 		now: nowTime,
 		micro: micro
-		// end return
 	};
 });
 if (typeof module !== "undefined") {

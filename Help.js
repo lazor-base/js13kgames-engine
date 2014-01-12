@@ -1,5 +1,7 @@
 var Help = (function() {
-	// name: help
+	// name: Help
+	// target: Client
+	// filenames: Engine
 
 	// variables
 	var LENGTH = "length";
@@ -16,7 +18,7 @@ var Help = (function() {
 	 * @returns {Function}
 	 */
 
-	 // functions
+	// functions
 	var Splice = (function() {
 		var helper = [];
 		var returnItems = [];
@@ -32,10 +34,10 @@ var Help = (function() {
 				} else {
 					helper.push(item);
 				}
-				id++
+				id++;
 			}
 			while (helper[LENGTH]) {
-				push.call(array, helper.shift())
+				push.call(array, helper.shift());
 			}
 			return returnItems.pop();
 		};
@@ -56,20 +58,21 @@ var Help = (function() {
 	function has(array, item) {
 		return array.indexOf(item) > -1;
 	}
-
-	return {
-		itemRemove: itemRemove,
-		indexRemove: indexRemove,
-		has: has,
-		splice: Splice
-	}
 	// end functions
 
 	// other
 	// end other
 
-	// return
-	// end return
+	return {
+		// return
+		itemRemove: itemRemove,
+		indexRemove: indexRemove,
+		has: has,
+		splice: Splice
+		// end return
+	};
+
+
 }());
 if (typeof module !== "undefined") {
 	module.exports = Help;

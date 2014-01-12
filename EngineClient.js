@@ -1,7 +1,4 @@
 (function(navigator, window, document) {
-	// name: engineclient
-
-	// variables
 	var arrayProto = Array.prototype;
 	/**
 	 * Converts functions into a module with events.
@@ -10,9 +7,6 @@
 	 *
 	 * @param  {Function} fn Uninitialized function to convert into a module.
 	 */
-	 // end variables
-
-	 // functions
 	function Module(fn) {
 		return fn({
 			on: function(name, callback) {

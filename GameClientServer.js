@@ -1,11 +1,7 @@
 var Game = Module(function(event) {
-	// name: gameclientserver
 
-	// variables
 	var test1, test2;
-	// end variables
 
-	// functions
 	function start() {
 		CONTROL_ON("change", function(localId, action, value, player) {
 			if (action === MOVEUP) {
@@ -54,11 +50,11 @@ var Game = Module(function(event) {
 			LIST_PUT(result);
 			//then draw
 			Draw.clear();
-			Draw.setup(test2, function(context) {
-				Draw.rect(test2, "lightgrey", "black");
+			Draw.setup(test2, Draw.context, function(entity, context) {
+				Draw.poly(test2, context, "lightgrey", "black");
 			});
-			Draw.setup(test1, function(context) {
-				Draw.rect(test1, color, color);
+			Draw.setup(test1, Draw.context, function(entity, context) {
+				Draw.poly(test1, context, color, color);
 			});
 		});
 		LOOP_GO(true);
@@ -71,7 +67,7 @@ var Game = Module(function(event) {
 		CONFIG_BIND(KEYBOARD, 0, MOVEUP, "W".charCodeAt(0));
 		CONFIG_BIND(KEYBOARD, 0, TURNCCW, "A".charCodeAt(0));
 		CONFIG_BIND(KEYBOARD, 0, MOVEDOWN, "S".charCodeAt(0));
-		CONTROL_LISTEN(Draw.canvas, KEYBOARD);
+		CONTROL_LISTEN(document, KEYBOARD);
 		test1 = LIST_GET(10, "f32");
 		test1.set(X, 10);
 		test1.set(Y, 10);
@@ -93,16 +89,11 @@ var Game = Module(function(event) {
 		test2.set(TURNSPEED, 0);
 		document.createElement("canvas");
 	}
-	// end functions
 
-	// other
-	// end other
 
 	return {
-		// return
 		setup: setup,
 		start: start,
 		ip: "127.0.0.1"
-		// end return
 	};
 });

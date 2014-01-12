@@ -1,6 +1,7 @@
-// name: list
-
 var List = Module(function() {
+	// name: List
+	// target: Client
+	// filenames: Engine
 	// variables
 	var NULL = null;
 	var created = 0;
@@ -20,6 +21,7 @@ var List = Module(function() {
 	};
 	// end variables
 
+	// functions
 	/**
 	 * Helper function to get byte size of each array, since the text is lengthy.
 	 *
@@ -30,9 +32,15 @@ var List = Module(function() {
 	 * @returns {Number}
 	 */
 
-	 // functions
 	function size(description) {
 		return types[description].BYTES_PER_ELEMENT;
+	}
+
+	function cleanList(list) {
+		for (var i = 0; i < list.array.length; i++) {
+			list.array[i] = 0;
+		}
+		return list;
 	}
 
 	/**
@@ -58,9 +66,7 @@ var List = Module(function() {
 			var element = oldArrays.shift();
 			do {
 				if (element.buffer.byteLength === array * size(description)) {
-					element.each(function(item,index) {
-						element.set(index,0);
-					});
+					cleanList(element);
 					return element;
 				}
 				oldArrays.push(element);
@@ -109,14 +115,15 @@ var List = Module(function() {
 	}
 
 	Node.prototype = {
+		array: NULL,
 		next: NULL,
 		prev: NULL,
 		list: NULL,
 		get length() {
-			return this[ARRAY][LENGTH]
+			return this[ARRAY][LENGTH];
 		},
 		each: function(fn) {
-			for (var i = 0; i < this[LENGTH]; i++) {
+			for (var i = 0; i < this[ARRAY][LENGTH]; i++) {
 				var result = fn(this[ARRAY][i], i, this[ARRAY]);
 				if (typeof result !== "undefined") {
 					return result;
@@ -221,6 +228,7 @@ var List = Module(function() {
 
 	return {
 		// return
+		clean: cleanList,
 		size: size,
 		get: getList,
 		put: putList,

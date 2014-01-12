@@ -1,5 +1,7 @@
 var Loop = Module(function(event) {
-	// name: loop
+	// name: Loop
+	// target: Client
+	// filenames: Engine
 
 	// variables
 	var stop = true;
@@ -17,7 +19,7 @@ var Loop = Module(function(event) {
 		} else {
 			return setTimeout(callback, 1000 / 60);
 		}
-	};
+	}
 
 	function go(bool) {
 		stop = !bool;

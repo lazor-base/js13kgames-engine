@@ -1,13 +1,8 @@
 var Time = Module(function(event) {
-	// name: time
-
-	// variables
 	var serverTime = Date.now();
 	var lastServerTimeSync = window.performance.now();
 	var timeDifference = 0;
-	// end variables
 
-	// functions
 	function now() {
 		return Date.now() - timeDifference;
 	}
@@ -50,13 +45,9 @@ var Time = Module(function(event) {
 			};
 		}
 	}())
-	// end functions
 
-	// other
-	// end other
 
 	return {
-		// return
 		now: now,
 		parse: parse,
 		micro: micro,
@@ -64,6 +55,5 @@ var Time = Module(function(event) {
 			lastServerTimeSync = window.performance.now();
 			serverTime = time;
 		}
-		// end return
 	};
 });

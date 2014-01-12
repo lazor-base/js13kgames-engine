@@ -1,11 +1,14 @@
-var Time = Module(function(event) {
-	// name: timeclient
+var Time = Module(function() {
+	// name: Time
+	// target: Client
+	// filenames: Engine
 
 	// variables
 	var now = Date.now;
-	// variables
+	// end variables
 
 	// functions
+
 	function nowTime() {
 		return now();
 	}
@@ -23,7 +26,7 @@ var Time = Module(function(event) {
 				return now() - loadTime;
 			};
 		}
-	}())
+	}());
 	// end functions
 
 	// other

@@ -1,5 +1,7 @@
-var Control = (function(navigator, window, document) {
-	// name: control
+var Control = (function(navigator) {
+	// name: Control
+	// targets: Client
+	// filenames: Engine
 
 	return Module(function(event) {
 		// variables
@@ -9,15 +11,14 @@ var Control = (function(navigator, window, document) {
 		var polling = false;
 		var prevRawGamepadTypes = [];
 		var prevTimestamps = [];
-		var gamePadListeners = [];
 		var gamepads = [];
-		var usedGamePads = [];
 		var oldGamePadIds = [];
 		var gamePadIds = [];
-		var listenNode;
+		var i = 0;
 		// end variables
 
 		// functions
+
 		function eventType(type) {
 			if (type.indexOf("mouse") > -1) {
 				return MOUSE;
@@ -63,6 +64,21 @@ var Control = (function(navigator, window, document) {
 			changeKey(eventType(e.type), 0, MOUSE_Y, mousey);
 		}
 
+		function touchMoveEvent(e) {
+			preventDefault(e);
+			var mousex = 0;
+			var mousey = 0;
+			if (e.touches[0].pageX || e.touches[0].pageY) {
+				mousex = e.touches[0].pageX;
+				mousey = e.touches[0].pageY;
+			} else if (e.touches[0].clientX || e.touches[0].clientY) {
+				mousex = e.touches[0].clientX;
+				mousey = e.touches[0].clientY;
+			}
+			changeKey(eventType("mouse"), 0, MOUSE_X, mousex);
+			changeKey(eventType("mouse"), 0, MOUSE_Y, mousey);
+		}
+
 		function startPolling() {
 			if (!polling) {
 				polling = true;
@@ -100,16 +116,16 @@ var Control = (function(navigator, window, document) {
 		function pollStatus() {
 			pollGamepads();
 			// the following is used to check if there has been a change to the button inputs in chrome.
-			for (var i in gamepads) {
-				var gamepad = gamepads[i];
+			for (var index in gamepads) {
+				var gamepad = gamepads[index];
 
 				// Don’t do anything if the current timestamp is the same as previous
 				// one, which means that the state of the gamepad hasn’t changed.
 				// This is only supported by Chrome right now, so the first check
 				// makes sure we’re not doing anything if the timestamps are empty
 				// or undefined.
-				if (gamepad.timestamp && (gamepad.timestamp !== prevTimestamps[i])) {
-					prevTimestamps[i] = gamepad.timestamp;
+				if (gamepad.timestamp && (gamepad.timestamp !== prevTimestamps[index])) {
+					prevTimestamps[index] = gamepad.timestamp;
 					event.emit("gamepadChange", gamepad);
 				}
 			}
@@ -141,7 +157,7 @@ var Control = (function(navigator, window, document) {
 				// “undefined.”
 				var gamepadsChanged = false;
 
-				for (var i = 0; i < rawGamepads[LENGTH]; i++) {
+				for (i = 0; i < rawGamepads[LENGTH]; i++) {
 					if (typeof rawGamepads[i] !== prevRawGamepadTypes[i]) {
 						gamepadsChanged = true;
 						prevRawGamepadTypes[i] = typeof rawGamepads[i];
@@ -157,17 +173,17 @@ var Control = (function(navigator, window, document) {
 				if (gamepadsChanged) {
 					//find which gamepads were added and which were removed
 					gamePadIds[LENGTH] = 0;
-					for (var i = 0; i < gamepads[LENGTH]; i++) {
+					for (i = 0; i < gamepads[LENGTH]; i++) {
 						gamePadIds[i] = gamepads[i].index;
 					}
 					var removed = compare(oldGamePadIds, gamePadIds);
 					var added = compare(gamePadIds, oldGamePadIds);
 					// LIST_PUT(oldGamePadIds);
 					oldGamePadIds = gamePadIds;
-					for (var i = 0; i < removed[LENGTH]; i++) {
+					for (i = 0; i < removed[LENGTH]; i++) {
 						event.emit("disconnect", removed[i]); // pass the gamepad ID
 					}
-					for (var i = 0; i < added[LENGTH]; i++) {
+					for (i = 0; i < added[LENGTH]; i++) {
 						event.emit("connect", added[i]); // pass the gamepad ID
 					}
 				}
@@ -182,25 +198,24 @@ var Control = (function(navigator, window, document) {
 			}
 		}
 
-		event.on("gamepadChange", gamepad);
 
-		function gamepad(gamepad) {
+		function testGamepad(gamepad) {
 			var hardwareId = gamepad.index;
 
 			// throttle the analogue stick values so that they don't change so often
-			for (var i = 0; i < gamepad.axes[LENGTH]; i++) {
+			for (i = 0; i < gamepad.axes[LENGTH]; i++) {
 				fixAxes(gamepad.axes[i], 35 / 100);
 			}
 
 			// run through each of the buttons
-			for (var i = 0; i < gamepad.buttons[LENGTH]; i++) {
+			for (i = 0; i < gamepad.buttons[LENGTH]; i++) {
 				// 4 axes are first, followed by the buttons, since we have an axes at 0 and a button at 0.
 				var action = gamepad.axes[LENGTH] + i;
 				changeKey(GAMEPAD, hardwareId, action, gamepad.buttons[i]);
 			}
 
 			// run through each of the axes
-			for (var i = 0; i < gamepad.axes[LENGTH]; i++) {
+			for (i = 0; i < gamepad.axes[LENGTH]; i++) {
 				changeKey(GAMEPAD, hardwareId, i, gamepad.axes[i]);
 			}
 		}
@@ -229,21 +244,26 @@ var Control = (function(navigator, window, document) {
 				node[addEventListener]("mousedown", pressEvent);
 				node[addEventListener]("mouseup", releaseEvent);
 				node[addEventListener]("mousemove", moveEvent);
-				node[addEventListener]("mousewheel", scrollEvent);
+				// node[addEventListener]("mousewheel", scrollEvent);
+				node[addEventListener]("touchmove", touchMoveEvent);
 			}
 			if (type === KEYBOARD) {
 				node[addEventListener]("keydown", pressEvent);
 				node[addEventListener]("keyup", releaseEvent);
 			}
 		}
-		// end functions 
+		// end functions
 
 		// other
+		event.on("gamepadChange", testGamepad);
 		// end other
 
 		return {
 			// return
 			preventDefault: preventDefault,
+			get gamepads() {
+				return gamepads
+			},
 			on: event.on,
 			emit: event.emit,
 			listen: listen,
@@ -251,7 +271,7 @@ var Control = (function(navigator, window, document) {
 			// end return
 		};
 	});
-}(navigator, window, document));
+}(navigator));
 if (typeof module !== "undefined") {
 	module.exports = Control;
 }
