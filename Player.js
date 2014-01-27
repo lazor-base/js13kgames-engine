@@ -5,17 +5,22 @@ var Player = Module(function(event) {
 
 	// variables
 	var uniqueId = 0;
-	var players = LIST_LINKED();
+	var players;
 
 	var playerOneCanUseController = false;
 	var totalControllers = 0;
 	var playerOneUsingGamepad = false;
 	var usedGamePads = [];
+	var length = 6;
 	// end variables
 
 	// functions
+
 	function register(mouse, keyboard, gamepad) {
-		var player = LIST_GET(6 + CONFIG_LENGTH, "s8");
+		if(!players) {
+			players = STRUCT_GET(STRUCT_MAKE(length + CONFIG_LENGTH, "s8"));
+		}
+		var player = players.get();
 		player.set(LOCALID, uniqueId);
 		player.set(REMOTEID, -1);
 		player.set(PING, 30);
@@ -23,16 +28,20 @@ var Player = Module(function(event) {
 		player.set(KEYBOARD, keyboard);
 		player.set(GAMEPAD, gamepad);
 		uniqueId++;
-		players.push(player);
 		return player;
 	}
 
-	function find(type, id) {
-		return players.each(function(player) {
+	function find(type, id, callback) {
+		var found = false;
+		players.each(function(player) {
 			if (player.get(type) === id) {
-				return player;
+				found = true;
+				callback(player);
 			}
-		}) || false;
+		});
+		if (!found) {
+			callback(PLAYER_REGISTER(-1, -1, id));
+		}
 	}
 
 	function onGamePadConnect() {
@@ -145,7 +154,9 @@ var Player = Module(function(event) {
 
 	return {
 		// return
-		length: 6,
+		get length() {
+			return length;
+		},
 		register: register,
 		find: find,
 		init: initPlayer,

@@ -9,9 +9,9 @@ var Struct = Module(function() {
 	// end variables
 
 	// functions
-	function makeStruct(length, type) {
+	function makeStruct() {
 		structId++;
-		structList[structId] = LIST_LINKED(type, length);
+		structList[structId] = LIST_LINKED.apply(this, arguments);
 		return structId;
 	}
 
