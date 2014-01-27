@@ -22,17 +22,13 @@ var Config = Module(function() {
 		return hardware[type][uniqueId].get(action);
 	}
 
-	function matchKey(type, id, keyCode) {
+	function matchKey(type, id, keyCode, match) {
 		var uniqueId = "" + type + id;
 		var result = hardware[type][uniqueId].each(function(key, action) {
 			if (key === keyCode) {
-				return action;
+				match(action);
 			}
 		});
-		if(typeof result === "undefined") {
-			return false;
-		}
-		return result;
 	}
 
 	function action() {

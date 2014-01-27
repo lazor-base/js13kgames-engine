@@ -28,29 +28,21 @@ var Control = (function(navigator) {
 			}
 		}
 
-		function preventDefault(e) {
-			e.preventDefault();
-		}
-
 
 		function pressEvent(e) {
-			preventDefault(e);
-			changeKey(eventType(e.type), 0, e.which, ACTIVE);
+			changeKey(eventType(e.type), 0, e.which, ACTIVE, e);
 		}
 
 		function releaseEvent(e) {
-			preventDefault(e);
-			changeKey(eventType(e.type), 0, e.which, INACTIVE);
+			changeKey(eventType(e.type), 0, e.which, INACTIVE, e);
 		}
 
 		function scrollEvent(e) {
-			preventDefault(e);
-			changeKey(eventType(e.type), 0, WHEEL_X, e.wheelDeltaX);
-			changeKey(eventType(e.type), 0, WHEEL_Y, e.wheelDeltaY);
+			changeKey(eventType(e.type), 0, WHEEL_X, e.wheelDeltaX, e);
+			changeKey(eventType(e.type), 0, WHEEL_Y, e.wheelDeltaY, e);
 		}
 
 		function moveEvent(e) {
-			preventDefault(e);
 			var mousex = 0;
 			var mousey = 0;
 			if (e.pageX || e.pageY) {
@@ -60,12 +52,11 @@ var Control = (function(navigator) {
 				mousex = e.clientX;
 				mousey = e.clientY;
 			}
-			changeKey(eventType(e.type), 0, MOUSE_X, mousex);
-			changeKey(eventType(e.type), 0, MOUSE_Y, mousey);
+			changeKey(eventType(e.type), 0, MOUSE_X, mousex, e);
+			changeKey(eventType(e.type), 0, MOUSE_Y, mousey, e);
 		}
 
 		function touchMoveEvent(e) {
-			preventDefault(e);
 			var mousex = 0;
 			var mousey = 0;
 			if (e.touches[0].pageX || e.touches[0].pageY) {
@@ -75,8 +66,8 @@ var Control = (function(navigator) {
 				mousex = e.touches[0].clientX;
 				mousey = e.touches[0].clientY;
 			}
-			changeKey(eventType("mouse"), 0, MOUSE_X, mousex);
-			changeKey(eventType("mouse"), 0, MOUSE_Y, mousey);
+			changeKey(eventType("mouse"), 0, MOUSE_X, mousex, e);
+			changeKey(eventType("mouse"), 0, MOUSE_Y, mousey, e);
 		}
 
 		function startPolling() {
@@ -220,19 +211,19 @@ var Control = (function(navigator) {
 			}
 		}
 
-		function changeKey(type, id, keyCode, value) {
-			var action = CONFIG_MATCH_KEY(type, id, keyCode);
-			if (action !== false) { // only proceed if this key is bound to an action
-				var player = PLAYER_FIND(type, id);
-				if (!player) {
-					// player one is registered by the engine, so this would be a new player using a controller.
-					player = PLAYER_REGISTER(-1, -1, id);
+		function changeKey(type, id, keyCode, value, e) {
+			CONFIG_MATCH_KEY(type, id, keyCode, function(action) {
+				if (e && e.preventDefault) {
+					e.preventDefault();
 				}
-				if (player.get(Player[LENGTH] + action) !== value) { // we only want to submit a change if the value is different
-					player.set(Player[LENGTH] + action, value);
-					sendEvent(player.get(LOCALID), action, value, player);
-				}
-			}
+				PLAYER_FIND(type, id, function(player) {
+					// console.log(player.get(PLAYER_LENGTH + action), value, player.get(PLAYER_LENGTH + action) !== value)
+					if (player.get(PLAYER_LENGTH + action) !== value) { // we only want to submit a change if the value is different
+						player.set(PLAYER_LENGTH + action, value);
+						sendEvent(player.get(LOCALID), action, value, player);
+					}
+				});
+			});
 		}
 
 		function sendEvent(localId, action, value, player) {
@@ -260,7 +251,6 @@ var Control = (function(navigator) {
 
 		return {
 			// return
-			preventDefault: preventDefault,
 			get gamepads() {
 				return gamepads
 			},

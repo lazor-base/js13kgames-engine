@@ -1,53 +1,62 @@
-var Command = Module(function() {
+var Command = Module(function(event) {
+	// name: List
+	// target: Client,Server
+	// filenames: Engine,Command
 
+	// variables
 	var commandList = [];
-	var history = [];
-	var executeListeners = [];
+	var commandStructId;
+	var commandStruct;
+	// end variables
 
-	function forEach(fn) {
-		for (var i = 0; i < commandList.length; i++) {
-			fn(commandList[i], i, commandList);
-		}
+	// functions
+
+	function processCommand(deltaTime) {
+		commandStruct.each(function(command) {
+			executeCommand(command, deltaTime);
+		});
 	}
 
-
-
-	function process(deltaTime) {
-		function processCommands(command, index, commandList) {
-			execute(command, false, deltaTime);
-		}
-		forEach(processCommands);
+	function newCommand(remoteId, ping, timeStamp, action, value) {
+		var command = commandStruct.get();
+		command.set(COMMAND_REMOTE_ID, remoteId);
+		command.set(COMMAND_PING, ping);
+		command.set(COMMAND_TIMESTAMP, timeStamp);
+		command.set(COMMAND_ACTION, action);
+		command.set(COMMAND_VALUE, value);
+		return executeCommand(command);
 	}
 
-	function execute(command, notYetPushed, deltaTime) {
-		if (time.now() >= command[TIMESTAMP]) {
-			for (var i = 0; i < executeListeners.length; i++) {
-				executeListeners[i](command, deltaTime, time.now() - command[TIMESTAMP]);
-			}
-			if (!notYetPushed) {
-				history.push(HELP_ITEM_REMOVE(commandList, command));
-			}
+	function executeCommand(command, deltaTime) {
+		var timeStamp = command.get(COMMAND_TIMESTAMP);
+		if (time.now() >= timeStamp) {
+			event.emit("executeCommand", command, deltaTime, TIME_NOW() - timeStamp);
+			LIST_PUSH(command);
+			return true;
 		} else {
 			return false;
 		}
 	}
 
-	function push(command) {
-		if (execute(command, true) === false) {
-			commandList.push(command);
-			return true;
-		}
+	function pushCommand(command) {
+		return executeCommand(command);
 	}
 
-	function onExecute(fn) {
-		executeListeners.push(fn);
-	}
+	// end functions
+	// other
+	GUI_ON("ready", function() {
+		commandStructId = STRUCT_MAKE(5, "f32");
+		commandStruct = STRUCT_GET(commandStructId);
+
+	});
+	// end other
 
 	return {
-		forEach: forEach,
-		process: process,
-		onExecute: onExecute,
-		push: push
+		// returns
+		process: processCommand,
+		on: event.on,
+		make: newCommand,
+		// end returns
 	};
 });
 if (typeof module !== "undefined") {
