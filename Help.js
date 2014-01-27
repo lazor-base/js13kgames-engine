@@ -1,7 +1,7 @@
 var Help = (function() {
 	// name: Help
-	// target: Client
-	// filenames: Engine
+	// target: Client,Test
+	// filenames: Engine,Engine
 
 	// variables
 	var LENGTH = "length";
@@ -56,7 +56,7 @@ var Help = (function() {
 	}
 
 	function has(array, item) {
-		return array.indexOf(item) > -1;
+		return Array.prototype.indexOf.call(array, item) > -1;
 	}
 	// end functions
 
