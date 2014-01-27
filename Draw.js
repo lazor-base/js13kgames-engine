@@ -1,47 +1,92 @@
 var Draw = Module(function(event) {
-	// name: draw
+	// name: Draw
+	// targets: Client
+	// filenames: Engine
 
 	// variables
-	var canvas, context;
-	GUI_ON("ready", function() {
-		canvas = GUI_MAKE("canvas");
-		canvas.width = 900;
-		canvas.height = 600;
-		GUI_PUT(canvas);
-		context = canvas.getContext("2d");
-	});
+	var stage, renderer;
+	var graphics = [];
+	var sprites = [];
+	var textures = [];
+	// end variables
 
-	function poly(entity, context, fillColor, strokeColor) {
-		with(context) {
-			beginPath();
-			var vertices = PHYSICS_GET_VERTICES(entity);
-			moveTo(vertices.get(X), vertices.get(Y));
-			for (i = 2; i < vertices.length; i += 2) {
-				lineTo(vertices.get(i + X), vertices.get(i + Y));
-			}
-			lineTo(vertices.get(X), vertices.get(Y));
-			LIST_PUT(vertices);
-			// beginPath();
-			// rect(-(entity.get(WIDTH) / 2), -(entity.get(HEIGHT) / 2), entity.get(WIDTH), entity.get(HEIGHT));
-			fillStyle = fillColor;
-			fill();
-			lineWidth = 2;
-			strokeStyle = strokeColor;
-			stroke();
-			closePath();
-		}
+
+	// functions
+
+	function newGraphic(callback) {
+		var index = graphics.length;
+		var graphic = new PIXI.Graphics();
+		graphics.push(graphic);
+		stage.addChild(graphic);
+		callback(graphic);
+		return index;
 	}
 
-	function setupDraw(entity, context, callback) {
+	function getGraphic(index) {
+		return graphics[index];
+	}
+
+	function makeSprite(index, callback) {
+		var sprite = new PIXI.Sprite(textures[index]);
+		callback(sprite);
+		stage.addChild(sprite);
+	}
+
+	function registerTexture(texture) {
+		var index = textures.length;
+		textures.push(texture);
+		return index;
+	}
+
+	function getTexture(index) {
+		return textures[index];
+	}
+
+	function poly(entity, graphic) {
+
+		// context.beginPath();
+		// var vertices = PHYSICS_GET_VERTICES(entity);
+		// moveTo(vertices.get(X), vertices.get(Y));
+		// for (i = 2; i < vertices.length; i += 2) {
+		// context.lineTo(vertices.get(i + X), vertices.get(i + Y));
+		// }
+		// context.lineTo(vertices.get(X), vertices.get(Y));
+		// LIST_PUT(vertices);
+		// context.beginPath();
+		graphic.clear();
+		graphic.beginFill(entity.get(COLOR), 1);
+		graphic.drawRect(-(entity.get(WIDTH) / 2), -(entity.get(HEIGHT) / 2), entity.get(WIDTH), entity.get(HEIGHT));
+		graphic.endFill();
+		// changeState(context, "lineWidth",2);
+		// changeState(context, "strokeStyle",strokeColor);
+		// context.fill();
+		// context.stroke();
+		// context.closePath();
+	}
+
+	function setupDraw(entity, graphic, callback) {
 		var x = entity.get(X);
 		var y = entity.get(Y);
 		var angle = entity.get(ANGLE) || 0;
-		with(context) {
-			save();
-			translate(x, y);
-			rotate(angle * Math.PI / 180);
-			callback(entity, context);
-			restore();
+		// context.save();
+		graphic.position.x = x;
+		graphic.position.y = y;
+		graphic.rotation = angle * Math.PI / 180;
+		// context.translate(x, y);
+		// context.rotate(angle * Math.PI / 180);
+		callback(entity, graphic);
+		// context.restore();
+	}
+
+	function reposition(graphic, entity) {
+		graphic.position.x = entity.get(X);
+		graphic.position.y = entity.get(Y);
+		graphic.rotation = entity.get(ANGLE) * Math.PI / 180;
+	}
+
+	function changeState(context, property, value) {
+		if (context[property] !== value) {
+			context[property] = value;
 		}
 	}
 
@@ -51,13 +96,46 @@ var Draw = Module(function(event) {
 	// end functions
 
 	// other
+	GUI_ON("ready", function() {
+		stage = new PIXI.Stage();
+		renderer = new PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight, null, true);
+		var resizeTimeout;
+		window.addEventListener("resize", function() {
+			renderer.resize(window.innerWidth, window.innerHeight);
+			if (resizeTimeout) {
+				clearTimeout(resizeTimeout);
+			}
+			resizeTimeout = setTimeout(function(){
+				EMIT_EVENT("resize");
+			},500);
+		});
+		// amount = (renderer instanceof PIXI.WebGLRenderer) ? 50 : 5;
+		// if (amount == 5) {
+		// 	renderer.context.mozImageSmoothingEnabled = false;
+		// 	renderer.context.webkitImageSmoothingEnabled = false;
+		// }
+		GUI_PUT(renderer.view);
+		LOOP_EVERY(0, function(deltaTime) {
+			renderer.render(stage);
+		});
+	});
 	// end other
 
 	return {
 		// return
 		clear: clear,
+		newGraphic: newGraphic,
+		getGraphic: getGraphic,
+		change: changeState,
 		poly: poly,
-		setup: setupDraw
+		registerTexture: registerTexture,
+		getTexture: getTexture,
+		makeSprite: makeSprite,
+		setup: setupDraw,
+		move: reposition,
+		get stage() {
+			return stage
+		}
 		// end return
 	};
 });

@@ -1,7 +1,7 @@
 var GUI = (function(document) {
 	// name: GUI
-	// target: Client
-	// filenames: Engine
+	// target: Client,Test
+	// filenames: Engine,Engine
 	return Module(function(event) {
 		// variables
 		var isReady = false;
