@@ -5,6 +5,9 @@ var Physics = Module(function() {
 
 	// variables
 	var axes = [];
+	var edge, axis, verticeList1, verticeList2, axes1, axes2;
+	var vectors = [];
+	var projections = [];
 	var overlap = 9e9;
 	var mathPiDividedBy180 = Math.PI / 180;
 	// end variables
@@ -20,6 +23,7 @@ var Physics = Module(function() {
 	}
 
 	function overlapping(vector1, vector2) {
+		console.log(getValue(vector1, X), ">", getValue(vector2, Y), getValue(vector2, X) ,">", getValue(vector1, Y), !(getValue(vector1, X) > getValue(vector2, Y) || getValue(vector2, X) > getValue(vector1, Y)))
 		return !(getValue(vector1, X) > getValue(vector2, Y) || getValue(vector2, X) > getValue(vector1, Y));
 	}
 
@@ -29,7 +33,7 @@ var Physics = Module(function() {
 
 	function putInList() {
 		for (var i = 0; i < arguments.length; i++) {
-			LIST_PUT(arguments[i]);
+			// LIST_PUT(arguments[i]);
 		}
 	}
 
@@ -50,17 +54,18 @@ var Physics = Module(function() {
 	function test(entity1, entity2) {
 		// Minimum Translation Vector (MTV)
 		var MTV = getf32List(3);
-		var axis = getf32List(2);
-		axes.length = 0;
-		var vertices1 = rotate(getVertices(entity1), entity1);
-		var vertices2 = rotate(getVertices(entity2), entity2);
-		axes.push(getAxes(vertices1), getAxes(vertices2));
+		var vertices1 = rotate(getVertices(entity1, LIST_CLEAN(verticeList1)), entity1);
+		var vertices2 = rotate(getVertices(entity2, LIST_CLEAN(verticeList2)), entity2);
+		var index = -1;
+		axes[0] = getAxes(vertices1, LIST_CLEAN(axes1));
+		axes[1] = getAxes(vertices2, LIST_CLEAN(axes2));
 		for (var i = 0; i < axes.length; i++) {
 			for (var e = 0; e < axes[i].length; e += 2) {
+				index++;
 				setXY(axis, getValue(axes[i], e + X), getValue(axes[i], e + Y));
 				// project both shapes onto the axis
-				var projection1 = project(axis, entity1, vertices1);
-				var projection2 = project(axis, entity2, vertices2);
+				var projection1 = project(axis, entity1, vertices1, LIST_CLEAN(projections[index]));
+				var projection2 = project(axis, entity2, vertices2, LIST_CLEAN(projections[index]));
 
 				// do the projections overlap?
 				if (!overlapping(projection1, projection2)) {
@@ -86,8 +91,7 @@ var Physics = Module(function() {
 		return MTV;
 	}
 
-	function project(axis, entity, vertices) {
-		var vector = getf32List(2);
+	function project(axis, entity, vertices, vector) {
 		setXY(vector, getValue(vertices, X), getValue(vertices, Y));
 		var min = dot(axis, vector);
 		var max = min;
@@ -105,11 +109,10 @@ var Physics = Module(function() {
 		return vector;
 	}
 
-	function getVertices(entity, rotated) {
+	function getVertices(entity, vertices, rotated) {
 		// counter clockwise vertices
 		var width = (getValue(entity, WIDTH) / 2);
 		var height = (getValue(entity, HEIGHT) / 2);
-		var vertices = getf32List(8);
 		setValue(vertices, 0, -width); // top left
 		setValue(vertices, 1, -height);
 		setValue(vertices, 2, +width); // top right
@@ -124,19 +127,21 @@ var Physics = Module(function() {
 		return vertices;
 	}
 
-	function getAxes(vertices) {
+	function getAxes(vertices, axes) {
 		var length = vertices.length;
-		var axes = getf32List(length);
+		var index = -1;
 		for (var i = 0; i < length; i += 2) {
-			var vector1 = getf32List(2);
-			var vector2 = getf32List(2);
+			index++;
+			var vector1 = LIST_CLEAN(vectors[index]);
+			index++;
+			var vector2 = LIST_CLEAN(vectors[index]);
 			setXY(vector1, getValue(vertices, i + X), getValue(vertices, i + Y));
 			var e = i + 2;
 			if (e === length) {
 				e = 0;
 			}
 			setXY(vector2, getValue(vertices, e + X), getValue(vertices, e + Y));
-			var edge = subtract(vector1, vector2);
+			subtract(vector1, vector2, LIST_CLEAN(edge));
 			var normal = perpendicular(edge);
 			setXY(axes, getValue(normal, X), getValue(normal, Y), i);
 			putInList(normal);
@@ -171,8 +176,7 @@ var Physics = Module(function() {
 		return vector;
 	}
 
-	function subtract(vector1, vector2) {
-		var result = getf32List(2);
+	function subtract(vector1, vector2, result) {
 		setXY(result, getValue(vector1, X) - getValue(vector2, X), getValue(vector1, Y) - getValue(vector2, Y));
 		putInList(vector1, vector2);
 		return result;
@@ -180,6 +184,20 @@ var Physics = Module(function() {
 	// end functions
 
 	// other
+	GUI_ON("ready", function() {
+		edge = getf32List(2);
+		axis = getf32List(2);
+		verticeList1 = getf32List(8);
+		verticeList2 = getf32List(8);
+		axes1 = getf32List(8);
+		axes2 = getf32List(8);
+		for (var i = 0; i < 16; i++) {
+			vectors.push(getf32List(2));
+		}
+		for (var i = 0; i < 16; i++) {
+			projections.push(getf32List(2));
+		}
+	});
 	// end other
 
 	return {
