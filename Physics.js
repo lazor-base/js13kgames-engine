@@ -5,7 +5,7 @@ var Physics = Module(function() {
 
 	// variables
 	var axes = [];
-	var edge, axis, verticeList1, verticeList2, axes1, axes2;
+	var edge, axis, verticeList1, verticeList2, axes1, axes2, MTV;
 	var vectors = [];
 	var projections = [];
 	var overlap = 9e9;
@@ -44,9 +44,9 @@ var Physics = Module(function() {
 		setValue(list, increment + Y, y);
 	}
 
-	function test(entity1, entity2) {
+	function test(entity1, entity2, callback) {
 		// Minimum Translation Vector (MTV)
-		var MTV = getf32List(3);
+		MTV = LIST_CLEAN(MTV);
 		var vertices1 = rotate(getVertices(entity1, LIST_CLEAN(verticeList1)), entity1);
 		var vertices2 = rotate(getVertices(entity2, LIST_CLEAN(verticeList2)), entity2);
 		var index = -1;
@@ -64,7 +64,7 @@ var Physics = Module(function() {
 				// do the projections overlap?
 				if (!overlapping(projection1, projection2)) {
 					// then we can guarantee that the shapes do not overlap
-					return false;
+					return callback(false);
 				} else {
 					// get the overlap
 					var projectionOverlap = getOverlap(projection1, projection2);
@@ -79,7 +79,7 @@ var Physics = Module(function() {
 		}
 		// if we get here then we know that every axis had overlap on it
 		// so we can guarantee an intersection
-		return MTV;
+		callback(MTV);
 	}
 
 	function project(axis, entity, vertices, vector) {
@@ -180,6 +180,7 @@ var Physics = Module(function() {
 		verticeList2 = getf32List(8);
 		axes1 = getf32List(8);
 		axes2 = getf32List(8);
+		MTV = getf32List(3);
 		for (var i = 0; i < 16; i++) {
 			vectors.push(getf32List(2));
 		}
