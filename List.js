@@ -35,6 +35,13 @@ var List = Module(function() {
 		i16: [],
 		i32: []
 	};
+	var lastSelectedNumbers = {
+		i4: -1,
+		i8: -1,
+		i12: -1,
+		i16: -1,
+		i32: -1
+	};
 	var maxValue = {
 		i4: Math.pow(2, 4) - 1,
 		i8: Math.pow(2, 8) - 1,
@@ -130,8 +137,8 @@ var List = Module(function() {
 	}
 
 	function cleanList(list) {
-		for (var i = 0; i < list.array.length; i++) {
-			list.array[i] = 0;
+		for (var i = 0; i < list.views[LENGTH]; i++) {
+			list.set(i, 0);
 		}
 		return list;
 	}
@@ -208,8 +215,6 @@ var List = Module(function() {
 		list: NULL,
 		setup: function(entries, description) {
 			var args = arguments;
-			this.indexes = [];
-			this.views = [];
 			var length = 0;
 			var type = "";
 			var index = -1;
@@ -220,29 +225,50 @@ var List = Module(function() {
 			} else {
 				length = entries;
 			}
+			if (this.indexes) {
+				this.indexes.length = length;
+				this.views.length = length;
+			} else {
+				this.indexes = [];
+				this.views = [];
+			}
 			for (var i = 0; i < length; i++) {
 				if (entriesIsString) {
 					type = "i" + nameOf(args[i]);
 				} else {
 					type = "i" + nameOf(description);
 				}
-				index = -1;
+				index = lastSelectedNumbers[type] + 1;
 				found = false;
-				while (found === false) {
-					index++;
-					if (!HELP_HAS(usedIndexes[type], index)) {
-						found = true;
-						usedIndexes[type].push(index);
-						this.indexes.push(index);
-						if (entriesIsString) {
-							this.views.push(args[i]);
-						} else {
-							this.views.push(description);
+				var result = usedIndexes[type].indexOf(index);
+				if (result === -1) {
+					usedIndexes[type].push(index);
+					this.indexes[i] = (index);
+					if (entriesIsString) {
+						this.views[i] = (args[i]);
+					} else {
+						this.views[i] = (description);
+					}
+				} else {
+					while (found === false) {
+						index++;
+						if (index > 1279) {
+							index = 0;
+						}
+						if (usedIndexes[type].indexOf(index) === -1) {
+							found = true;
+							usedIndexes[type].push(index);
+							this.indexes[i] = (index);
+							if (entriesIsString) {
+								this.views[i] = (args[i]);
+							} else {
+								this.views[i] = (description);
+							}
 						}
 					}
 				}
+				lastSelectedNumbers[type] = index;
 			}
-
 		},
 		get length() {
 			return this.views[LENGTH];
@@ -270,6 +296,17 @@ var List = Module(function() {
 			// console.log(view, this.views, index)
 			var bufferView = new types[view](buffers["i" + nameOf(view)]);
 			return getFunctions(nameOf(view), bufferView, internalIndex, sign);
+		},
+		toString: function() {
+			var string = "[";
+			for (var i = 0; i < this.views[LENGTH]; i++) {
+				string += this.get(i);
+				if (i + 1 !== this.views[LENGTH]) {
+					string += ", ";
+				}
+			}
+			string += "]";
+			return string;
 		}
 	};
 

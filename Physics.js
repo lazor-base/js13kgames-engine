@@ -23,7 +23,6 @@ var Physics = Module(function() {
 	}
 
 	function overlapping(vector1, vector2) {
-		console.log(getValue(vector1, X), ">", getValue(vector2, Y), getValue(vector2, X) ,">", getValue(vector1, Y), !(getValue(vector1, X) > getValue(vector2, Y) || getValue(vector2, X) > getValue(vector1, Y)))
 		return !(getValue(vector1, X) > getValue(vector2, Y) || getValue(vector2, X) > getValue(vector1, Y));
 	}
 
@@ -65,6 +64,7 @@ var Physics = Module(function() {
 				setXY(axis, getValue(axes[i], e + X), getValue(axes[i], e + Y));
 				// project both shapes onto the axis
 				var projection1 = project(axis, entity1, vertices1, LIST_CLEAN(projections[index]));
+				index++;
 				var projection2 = project(axis, entity2, vertices2, LIST_CLEAN(projections[index]));
 
 				// do the projections overlap?
