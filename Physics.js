@@ -30,12 +30,6 @@ var Physics = Module(function() {
 		return LIST_GET(size, "f32");
 	}
 
-	function putInList() {
-		for (var i = 0; i < arguments.length; i++) {
-			// LIST_PUT(arguments[i]);
-		}
-	}
-
 	function getValue(list, index) {
 		return list.get(index);
 	}
@@ -70,12 +64,10 @@ var Physics = Module(function() {
 				// do the projections overlap?
 				if (!overlapping(projection1, projection2)) {
 					// then we can guarantee that the shapes do not overlap
-					putInList(projection1, projection2, axes[0], axes[1], axis, MTV, vertices1, vertices2);
 					return false;
 				} else {
 					// get the overlap
 					var projectionOverlap = getOverlap(projection1, projection2);
-					putInList(projection1, projection2);
 					// check for minimum
 					if (projectionOverlap < overlap) {
 						// then set this one as the smallest
@@ -87,7 +79,6 @@ var Physics = Module(function() {
 		}
 		// if we get here then we know that every axis had overlap on it
 		// so we can guarantee an intersection
-		putInList(axes[0], axes[1], axis, vertices1, vertices2);
 		return MTV;
 	}
 
@@ -144,7 +135,6 @@ var Physics = Module(function() {
 			subtract(vector1, vector2, LIST_CLEAN(edge));
 			var normal = perpendicular(edge);
 			setXY(axes, getValue(normal, X), getValue(normal, Y), i);
-			putInList(normal);
 		}
 		return axes;
 	}
@@ -178,7 +168,6 @@ var Physics = Module(function() {
 
 	function subtract(vector1, vector2, result) {
 		setXY(result, getValue(vector1, X) - getValue(vector2, X), getValue(vector1, Y) - getValue(vector2, Y));
-		putInList(vector1, vector2);
 		return result;
 	}
 	// end functions
