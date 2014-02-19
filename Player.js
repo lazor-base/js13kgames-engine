@@ -33,14 +33,17 @@ var Player = Module(function(event) {
 
 	function find(type, id, callback) {
 		var found = false;
+		if(type === MOUSE && players.first.get(type) === id) {
+			return callback(players.first);
+		}
 		players.each(function(player) {
 			if (player.get(type) === id) {
 				found = true;
-				callback(player);
+				return callback(player);
 			}
 		});
 		if (!found) {
-			callback(PLAYER_REGISTER(-1, -1, id));
+			return callback(PLAYER_REGISTER(-1, -1, id));
 		}
 	}
 

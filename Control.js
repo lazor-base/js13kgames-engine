@@ -15,6 +15,8 @@ var Control = (function(navigator) {
 		var oldGamePadIds = [];
 		var gamePadIds = [];
 		var i = 0;
+		var mousex = 0;
+		var mousey = 0;
 		// end variables
 
 		// functions
@@ -38,13 +40,11 @@ var Control = (function(navigator) {
 		}
 
 		function scrollEvent(e) {
-			changeKey(eventType(e.type), 0, WHEEL_X, e.wheelDeltaX, e);
-			changeKey(eventType(e.type), 0, WHEEL_Y, e.wheelDeltaY, e);
+			changeKey(eventType(e.type), 0, MOUSE_WHEEL_X, e.wheelDeltaX, e);
+			changeKey(eventType(e.type), 0, MOUSE_WHEEL_Y, e.wheelDeltaY, e);
 		}
 
 		function moveEvent(e) {
-			var mousex = 0;
-			var mousey = 0;
 			if (e.pageX || e.pageY) {
 				mousex = e.pageX;
 				mousey = e.pageY;
@@ -52,13 +52,11 @@ var Control = (function(navigator) {
 				mousex = e.clientX;
 				mousey = e.clientY;
 			}
-			changeKey(eventType(e.type), 0, MOUSE_X, mousex, e);
-			changeKey(eventType(e.type), 0, MOUSE_Y, mousey, e);
+			// changeKey(eventType(e.type), 0, MOUSE_MOVE_X, mousex, e);
+			// changeKey(eventType(e.type), 0, MOUSE_MOVE_Y, mousey, e);
 		}
 
 		function touchMoveEvent(e) {
-			var mousex = 0;
-			var mousey = 0;
 			if (e.touches[0].pageX || e.touches[0].pageY) {
 				mousex = e.touches[0].pageX;
 				mousey = e.touches[0].pageY;
@@ -66,8 +64,21 @@ var Control = (function(navigator) {
 				mousex = e.touches[0].clientX;
 				mousey = e.touches[0].clientY;
 			}
-			changeKey(eventType("mouse"), 0, MOUSE_X, mousex, e);
-			changeKey(eventType("mouse"), 0, MOUSE_Y, mousey, e);
+			// changeKey(eventType("mouse"), 0, MOUSE_MOVE_X, mousex, e);
+			// changeKey(eventType("mouse"), 0, MOUSE_MOVE_Y, mousey, e);
+		}
+
+		function mouseChangeEvent(type, id, keyCode, value, e) {
+			if (e && e.preventDefault) {
+				e.preventDefault();
+			}
+			PLAYER_FIND(type, id, function(player) {
+				// console.log(player.get(PLAYER_LENGTH + action), value, player.get(PLAYER_LENGTH + action) !== value)
+				if (player.get(PLAYER_LENGTH + action) !== value) { // we only want to submit a change if the value is different
+					player.set(PLAYER_LENGTH + action, value);
+					sendEvent(player.get(LOCALID), action, value, player);
+				}
+			});
 		}
 
 		function startPolling() {
@@ -218,7 +229,7 @@ var Control = (function(navigator) {
 				}
 				PLAYER_FIND(type, id, function(player) {
 					// console.log(player.get(PLAYER_LENGTH + action), value, player.get(PLAYER_LENGTH + action) !== value)
-					if (player.get(PLAYER_LENGTH + action) !== value) { // we only want to submit a change if the value is different
+					if (player.get(PLAYER_LENGTH + action) !== value || (type === MOUSE && (keyCode === MOUSE_WHEEL_X || keyCode === MOUSE_WHEEL_Y))) { // we only want to submit a change if the value is different
 						player.set(PLAYER_LENGTH + action, value);
 						sendEvent(player.get(LOCALID), action, value, player);
 					}
@@ -235,8 +246,12 @@ var Control = (function(navigator) {
 				node[addEventListener]("mousedown", pressEvent);
 				node[addEventListener]("mouseup", releaseEvent);
 				node[addEventListener]("mousemove", moveEvent);
-				// node[addEventListener]("mousewheel", scrollEvent);
+				node[addEventListener]("mousewheel", scrollEvent);
 				node[addEventListener]("touchmove", touchMoveEvent);
+				LOOP_EVERY(0, function() {
+					changeKey(MOUSE, 0, MOUSE_MOVE_X, mousex);
+					changeKey(MOUSE, 0, MOUSE_MOVE_Y, mousey);
+				})
 			}
 			if (type === KEYBOARD) {
 				node[addEventListener]("keydown", pressEvent);

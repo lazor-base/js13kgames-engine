@@ -33,6 +33,9 @@ var Map = Module(function(event) {
 	}
 
 	function moveMap(x, y, z) {
+		var oldViewPortX = viewPortX;
+		var oldViewPortY = viewPortY;
+		var oldViewPortZ = viewPortZ;
 		if (x !== null) {
 			viewPortX += x;
 			mapOffsetX += x;
@@ -40,7 +43,17 @@ var Map = Module(function(event) {
 			textHost.position.x = mapOffsetX;
 		}
 		if (y !== null) {
-			viewPortY += y;
+			if (y < 0) {
+				viewPortY--;
+			} else {
+				viewPortY++;
+			}
+			if (viewPortY > chunkDimention - 2) { // always show ground (15) layer
+				viewPortY = chunkDimention - 2;
+			}
+			if (viewPortY < 0) {
+				viewPortY = 0;
+			}
 		}
 		if (z !== null) {
 			viewPortZ += z;
@@ -48,6 +61,14 @@ var Map = Module(function(event) {
 			graphics.position.y = mapOffsetY;
 			textHost.position.y = mapOffsetY;
 		}
+		if (oldViewPortX !== viewPortX || oldViewPortY !== viewPortY || oldViewPortZ !== viewPortZ) {
+			return true;
+		}
+		return false;
+	}
+
+	function getRandomInt(min, max) {
+		return Math.floor(Math.random() * (max - min + 1) + min);
 	}
 
 	function makeChunk(positionX, positionZ) {
@@ -92,14 +113,52 @@ var Map = Module(function(event) {
 				};
 				chunk.Sections.push(sectionData);
 			}
-			var simplex = new SimplexNoise(Math.random);
-			for (var y = 0; y < chunkDimention; y++) {
-				for (var z = 0; z < chunkDimention; z++) {
-					for (var x = 0; x < chunkDimention; x++) {
+			// var simplex = new SimplexNoise(Math.random);
+			for (var z = 0; z < chunkDimention; z++) {
+				for (var x = 0; x < chunkDimention; x++) {
+					var heightMapSet = false;
+					var previousYBlock = 0;
+					for (var y = chunkDimention - 1; y > -1; y--) {
 						var internalCoordinate = ((y * chunkDimention + z) * chunkDimention + x);
-						var data = round(simplex.noise3D(x, y, z));
+						if (y === 15) {
+							var data = 1;
+						} else if (y === 8) {
+							var data = 1;
+						} else if (y < 8 && y > 4) {
+							if (previousYBlock > 0) {
+								var data = round(getRandomInt(-8, y/2));
+
+								//////////////////////////////////////////////////////////////////////////////////////////
+								// split into function call passing previous Y, same level previous block (x-1) //
+								// return 0 or blockid                                                          //
+								//////////////////////////////////////////////////////////////////////////////////////////
+							} else {
+								var data = 0;
+							}
+						} else if (y < 5) {
+							var data = 0;
+						} else {
+							var data = round(getRandomInt(-1, 9));
+							// var data = round(simplex.noise3D(x, y, z));
+						}
 						chunk.Sections[i].Blocks.set(internalCoordinate, data);
-						if (data > 0) {
+						// if (heightMapSet === false && data > 0) {
+						// 	heightMapSet = true;
+						// 	chunk.HeightMap.set((z * chunkDimention) + x, y);
+						// }
+						previousYBlock = data;
+					}
+					for (var y = 0; y < chunkDimention; y++) {
+						var internalCoordinate = ((y * chunkDimention + z) * chunkDimention + x);
+						// if (y === 15) {
+						// 	var data = 1;
+						// } else {
+						// 	var data = round(getRandomInt(-1, 5));
+						// 	// var data = round(simplex.noise3D(x, y, z));
+						// }
+						var data = chunk.Sections[i].Blocks.get(internalCoordinate);
+						if (heightMapSet === false && data > 0) {
+							heightMapSet = true;
 							chunk.HeightMap.set((z * chunkDimention) + x, y);
 						}
 					}
@@ -138,8 +197,10 @@ var Map = Module(function(event) {
 		var chunkTime = 0;
 		var mapTime = 0;
 		for (var i = -1; i < horizontalChunks + 1; i++) {
+			// for (var i = 0; i < 1; i++) {
 			var Zcoordinate = Math.ceil(-viewPortZ / tileSize) - 1;
 			for (var e = -1; e < verticalChunks + 1; e++) {
+				// for (var e = 0; e < 1; e++) {
 				onScreen.push(Xcoordinate + "," + Zcoordinate)
 				var start1 = performance.now();
 				var chunk = makeChunk(Xcoordinate, Zcoordinate);
@@ -162,7 +223,7 @@ var Map = Module(function(event) {
 	}
 
 	function color(number) {
-		var hex = number.toString(16);
+		var hex = (15 - number).toString(16);
 		var string = hex + hex + hex + hex + hex + hex;
 		return parseInt(string, 16);
 	}
@@ -174,29 +235,50 @@ var Map = Module(function(event) {
 			for (var z = 0; z < chunkDimention; z++) {
 				for (var x = 0; x < chunkDimention; x++) {
 					var drawn = false;
-					for (var y = 0; y < chunkDimention; y++) {
-						var internalCoordinate = ((y * chunkDimention + z) * chunkDimention + x);
+					var heightMapData = chunk.HeightMap.get((z * chunkDimention) + x);
+					// console.log(viewPortY > heightMapData, viewPortY, heightMapData)
+					if (viewPortY > heightMapData) {
+						for (var y = viewPortY; y < chunkDimention; y++) {
+							var internalCoordinate = ((y * chunkDimention + z) * chunkDimention + x);
+							var blockId = blockList.get(internalCoordinate);
+							if (!drawn && blockId) {
+								drawn = true;
+								var style = color(y);
+								var block = BLOCK_GET(blockId);
+								var xCoordinate = (x * BLOCK_SIZE) + (chunkX * chunkDimention * BLOCK_SIZE) + (viewPortX % 512);
+								var yCoordinate = (z * BLOCK_SIZE) + (chunkZ * chunkDimention * BLOCK_SIZE) + (viewPortZ % 512);
+								block.drawFn(graphics, xCoordinate, yCoordinate, style, 1);
+								y = chunkDimention;
+							}
+						}
+					} else {
+						var style = color(heightMapData);
+						var internalCoordinate = ((heightMapData * chunkDimention + z) * chunkDimention + x);
 						var blockId = blockList.get(internalCoordinate);
-						if (!drawn && blockId) {
-							drawn = true;
+						if (blockId) {
 							var block = BLOCK_GET(blockId);
-							var style = color(chunk.HeightMap.get((z * chunkDimention) + x));
 							var xCoordinate = (x * BLOCK_SIZE) + (chunkX * chunkDimention * BLOCK_SIZE) + (viewPortX % 512);
 							var yCoordinate = (z * BLOCK_SIZE) + (chunkZ * chunkDimention * BLOCK_SIZE) + (viewPortZ % 512);
 							block.drawFn(graphics, xCoordinate, yCoordinate, style, 1);
-							y = chunkDimention;
 						}
 					}
 				}
 			}
 		}
-		// var text = new PIXI.Text(chunk.Data.get(CHUNK_X) + "," + chunk.Data.get(CHUNK_Z) + "," + chunkX + "," + chunkZ, {
-		// 	font: "50px Arial",
-		// 	fill: "red"
-		// });
-		// text.position.x = (chunkX * chunkDimention * BLOCK_SIZE) + (viewPortX % 512);
-		// text.position.y = (chunkZ * chunkDimention * BLOCK_SIZE) + (viewPortZ % 512);
-		// textHost.addChild(text);
+		var text = new PIXI.Text(chunk.Data.get(CHUNK_X) + "," + chunk.Data.get(CHUNK_Z) + "," + chunkX + "," + chunkZ, {
+			font: "50px Arial",
+			fill: "red"
+		});
+		text.position.x = (chunkX * chunkDimention * BLOCK_SIZE) + (viewPortX % 512);
+		text.position.y = (chunkZ * chunkDimention * BLOCK_SIZE) + (viewPortZ % 512);
+		textHost.addChild(text);
+		var text = new PIXI.Text("" + viewPortY, {
+			font: "50px Arial",
+			fill: "blue"
+		});
+		text.position.x = window.innerWidth / 2;
+		text.position.y = window.innerHeight / 2;
+		textHost.addChild(text);
 		console.timeEnd("render Chunk");
 	}
 	// end functions
