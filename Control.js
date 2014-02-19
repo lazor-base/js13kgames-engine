@@ -117,7 +117,7 @@ var Control = (function(navigator) {
 				// or undefined.
 				if (gamepad.timestamp && (gamepad.timestamp !== prevTimestamps[index])) {
 					prevTimestamps[index] = gamepad.timestamp;
-					event.emit("gamepadChange", gamepad);
+					EMIT_EVENT("gamepadChange", gamepad);
 				}
 			}
 		}
@@ -172,10 +172,10 @@ var Control = (function(navigator) {
 					// LIST_PUT(oldGamePadIds);
 					oldGamePadIds = gamePadIds;
 					for (i = 0; i < removed[LENGTH]; i++) {
-						event.emit("disconnect", removed[i]); // pass the gamepad ID
+						EMIT_EVENT("disconnect", removed[i]); // pass the gamepad ID
 					}
 					for (i = 0; i < added[LENGTH]; i++) {
-						event.emit("connect", added[i]); // pass the gamepad ID
+						EMIT_EVENT("connect", added[i]); // pass the gamepad ID
 					}
 				}
 			}
@@ -227,7 +227,7 @@ var Control = (function(navigator) {
 		}
 
 		function sendEvent(localId, action, value, player) {
-			event.emit("change", localId, action, value, player);
+			EMIT_EVENT("change", localId, action, value, player);
 		}
 
 		function listen(node, type) {

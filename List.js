@@ -9,31 +9,30 @@ var List = Module(function() {
 	var NEXT = "next";
 	var ARRAY = "array";
 	var oldArrays = [];
-	var types = {
-		u4: Uint8Array,
-		u8: Uint8Array,
-		u12: Uint16Array,
-		u16: Uint16Array,
-		u32: Uint32Array,
-		s8: Int8Array,
-		s16: Int16Array,
-		s32: Int32Array,
-		f32: Float32Array,
-		f64: Float64Array
-	};
+	var types = {};
+	types[UINT4] = Uint8Array;
+	types[UINT8] = Uint8Array;
+	types[UINT12] = Uint16Array;
+	types[UINT16] = Uint16Array;
+	types[UINT32] = Uint32Array;
+	types[INT8] = Int8Array;
+	types[INT16] = Int16Array;
+	types[INT32] = Int32Array;
+	types[FLOAT32] = Float32Array;
+	types[FLOAT64] = Float64Array;
 	var buffers = {
-		i4: new ArrayBuffer((4 / 8) * 10240),
-		i8: new ArrayBuffer((8 / 8) * 10240),
-		i12: new ArrayBuffer((12 / 8) * 10240),
-		i16: new ArrayBuffer((16 / 8) * 10240),
-		i32: new ArrayBuffer((32 / 8) * 10240)
+		i4: new ArrayBuffer((1048576 * 4) / 8),
+		i8: new ArrayBuffer((1048576 * 8) / 8),
+		i12: new ArrayBuffer((10240 * 12) / 8),
+		i16: new ArrayBuffer((524288 * 16) / 8),
+		i32: new ArrayBuffer((10240 * 32) / 8)
 	};
 	var usedIndexes = {
-		i4: [],
-		i8: [],
-		i12: [],
-		i16: [],
-		i32: []
+		i4: new Uint8Array((1048576 * 1) / 8),
+		i8: new Uint8Array((1048576 * 1) / 8),
+		i12: new Uint8Array((10240 * 1) / 8),
+		i16: new Uint8Array((524288 * 1) / 8),
+		i32: new Uint8Array((10240 * 1) / 8)
 	};
 	var lastSelectedNumbers = {
 		i4: -1,
@@ -53,26 +52,38 @@ var List = Module(function() {
 
 	// functions
 
-	function getFunctions(view, bufferView, index, sign) {
-		if (["32", "16", "8"].indexOf(view) > -1) {
+	function translate(description) {
+		if (description === UINT4) {
+			return "i4";
+		} else if (description % UINT8 === 0) {
+			return "i8";
+		} else if (description % UINT16 === 0) {
+			return "i16";
+		} else if (description % UINT32 === 0) {
+			return "i32";
+		} else if (description === UINT12) {
+			return "i12";
+		} else if (description === FLOAT64) {
+			return "i64";
+		}
+	}
+
+	function getFunctions(view, bufferView, index) {
+		if (view === "i8" || view === "i16" || view === "i32") {
 			return bufferView[index];
-		} else if (view === "12") {
-			// return getInt12(index, bufferView);
-			return getBits(12, index, bufferView, sign);
-		} else if (view === "4") {
-			// return getInt4(index, bufferView);
-			return getBits(4, index, bufferView, sign);
+		} else if (view === "i12") {
+			return getBits(12, index, bufferView);
+		} else if (view === "i4") {
+			return getBits(4, index, bufferView);
 		}
 	}
 
 	function setFunctions(view, bufferView, index, value) {
-		if (["32", "16", "8"].indexOf(view) > -1) {
+		if (view === "i8" || view === "i16" || view === "i32") {
 			bufferView[index] = value;
-		} else if (view === "12") {
-			// setInt12(index, value, bufferView);
+		} else if (view === "i12") {
 			setBits(12, index, value, bufferView);
-		} else if (view === "4") {
-			// setInt4(index, value, bufferView);
+		} else if (view === "i4") {
 			setBits(4, index, value, bufferView);
 		}
 	}
@@ -104,6 +115,24 @@ var List = Module(function() {
 		return parseInt(binary[offset], 10);
 	};
 
+	function get8bit(index, bufferView) {
+		var v = bufferView[index >> 3];
+		if (v === undefined) {
+			return NaN;
+		}
+		var off = index & 0x7;
+		return (v >> (7 - off)) & 1;
+	}
+
+	function set8bit(index, value, bufferView) {
+		var off = index & 0x7;
+		if (value) {
+			bufferView[index >> 3] |= (0x80 >> off);
+		} else {
+			bufferView[index >> 3] &= ~ (0x80 >> off);
+		}
+	}
+
 	function setBit(index, value, bufferView) {
 		var offset = 7 - (index & 7); // keeps the number below 8
 		var decimal = bufferView[index >> 3];
@@ -113,14 +142,14 @@ var List = Module(function() {
 		var decimal = bufferView[index >> 3];
 	};
 
-	function getBits(bits, index, bufferView, sign) {
+	function getBits(bits, index, bufferView) {
 		var startIndex = Math.floor(((index * bits)) / 8);
 		var number = "";
 		for (var i = 0; i < bits; i++) {
 			var offset = (index * bits) + i;
 			number += "" + getBit(offset, bufferView);
 		}
-		return toDecimal((sign || "+") + number);
+		return toDecimal(number);
 	}
 
 	function setBits(bits, index, value, bufferView) {
@@ -175,10 +204,10 @@ var List = Module(function() {
 				for (var i = 0; i < array.indexes.length; i++) {
 					var index = array.indexes[i];
 					array.set(i, 0);
-
-					var arrayToSplice = usedIndexes["i" + nameOf(array.views[i])];
-					var itemToRemove = arrayToSplice.indexOf(index);
-					arrayToSplice.splice(itemToRemove, 1);
+					var name = array.types[i];
+					var arrayToSplice = usedIndexes[name];
+					// arrayToSplice[index] = 0;
+					set8bit(index, 0, arrayToSplice);
 				}
 				array.indexes.length = 0;
 				array.views.length = 0;
@@ -190,8 +219,11 @@ var List = Module(function() {
 	}
 
 
-	function getList() {
-		var args = arguments;
+	function getList(entries, description) {
+		if(typeof description === "string") {
+			console.trace();
+			throw new Error("Expected description to be a number, instead it was:"+description)
+		}
 		var result;
 
 		if (oldArrays.length > 0) {
@@ -199,7 +231,7 @@ var List = Module(function() {
 		} else {
 			result = new Node();
 		}
-		result.setup.apply(result, args);
+		result.setup(entries, description);
 		return result;
 	}
 
@@ -209,61 +241,59 @@ var List = Module(function() {
 
 	function Node() {}
 
+	function indexOf(array, item) {
+		var length = array.length;
+		for (var i = length; i--;) {
+			if (array[i] === item) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
 	Node.prototype = {
 		next: NULL,
 		prev: NULL,
 		list: NULL,
 		setup: function(entries, description) {
-			var args = arguments;
-			var length = 0;
-			var type = "";
 			var index = -1;
 			var found = false;
-			var entriesIsString = typeof entries === "string";
-			if (entriesIsString) {
-				length = args.length;
-			} else {
-				length = entries;
-			}
 			if (this.indexes) {
-				this.indexes.length = length;
-				this.views.length = length;
+				this.indexes.length = entries;
+				this.views.length = entries;
+				this.types.length = entries;
 			} else {
 				this.indexes = [];
 				this.views = [];
+				this.types = [];
 			}
-			for (var i = 0; i < length; i++) {
-				if (entriesIsString) {
-					type = "i" + nameOf(args[i]);
-				} else {
-					type = "i" + nameOf(description);
-				}
+			var type = translate(description);
+			for (var i = 0; i < entries; i++) {
 				index = lastSelectedNumbers[type] + 1;
 				found = false;
-				var result = usedIndexes[type].indexOf(index);
-				if (result === -1) {
-					usedIndexes[type].push(index);
+				var result = get8bit(index, usedIndexes[type]);
+				if (result === 0) { // not used
+					set8bit(index, 1, usedIndexes[type]);
 					this.indexes[i] = (index);
-					if (entriesIsString) {
-						this.views[i] = (args[i]);
-					} else {
-						this.views[i] = (description);
-					}
+					this.views[i] = (description);
+					this.types[i] = (type);
 				} else {
+					var restart = false;
 					while (found === false) {
 						index++;
 						if (index > 1279) {
+							if (restart) {
+								throw new Error("There are no more indexes in :" + type)
+							}
+							restart = true;
 							index = 0;
 						}
-						if (usedIndexes[type].indexOf(index) === -1) {
+						if (get8bit(index, usedIndexes[type]) === 0) {
 							found = true;
-							usedIndexes[type].push(index);
+							set8bit(index, 1, usedIndexes[type]);
 							this.indexes[i] = (index);
-							if (entriesIsString) {
-								this.views[i] = (args[i]);
-							} else {
-								this.views[i] = (description);
-							}
+							this.views[i] = (description);
+							this.types[i] = (type);
 						}
 					}
 				}
@@ -281,21 +311,22 @@ var List = Module(function() {
 		set: function(index, value) {
 			var internalIndex = this.indexes[index];
 			var view = this.views[index];
-			var bufferView = new types[view](buffers["i" + nameOf(view)]);
-			var maximum = maxValue["i" + nameOf(view)];
+			var name = this.types[index];
+			var bufferView = new types[view](buffers[name]);
+			var maximum = maxValue[name];
 			if (value > maximum) {
 				value = maximum;
 			} else if (value < 0 && value < -maximum) {
 				value = -maximum;
 			}
-			return setFunctions(nameOf(view), bufferView, internalIndex, value);
+			return setFunctions(name, bufferView, internalIndex, value);
 		},
-		get: function(index, sign) {
+		get: function(index) {
 			var internalIndex = this.indexes[index];
 			var view = this.views[index];
-			// console.log(view, this.views, index)
-			var bufferView = new types[view](buffers["i" + nameOf(view)]);
-			return getFunctions(nameOf(view), bufferView, internalIndex, sign);
+			var name = this.types[index];
+			var bufferView = new types[view](buffers[name]);
+			return getFunctions(name, bufferView, internalIndex);
 		},
 		toString: function() {
 			var string = "[";

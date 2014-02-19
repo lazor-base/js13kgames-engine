@@ -32,6 +32,7 @@ var Loop = Module(function(event) {
 		if (stop === false) {
 			lastTick = currentTick;
 			currentTick = TIME_MICRO();
+			EMIT_EVENT("nextFrame");
 			for (var i = 0; i < intervals.length; i++) {
 				if (stop) {
 					return true;
@@ -40,7 +41,7 @@ var Loop = Module(function(event) {
 				if (currentTick - intervalTicks[i] >= interval) {
 					var deltaTime = currentTick - intervalTicks[i];
 					intervalTicks[i] = currentTick;
-					event.emit(intervals[i], deltaTime);
+					EMIT_EVENT(intervals[i], deltaTime);
 				}
 			}
 			loop = nextFrame(run);
@@ -64,7 +65,6 @@ var Loop = Module(function(event) {
 		go: go,
 		every: every,
 		on: event.on,
-		emit: event.emit,
 		// end return
 	};
 });

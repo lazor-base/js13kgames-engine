@@ -18,7 +18,7 @@ var Player = Module(function(event) {
 
 	function register(mouse, keyboard, gamepad) {
 		if(!players) {
-			players = STRUCT_GET(STRUCT_MAKE(length + CONFIG_LENGTH, "s8"));
+			players = STRUCT_GET(STRUCT_MAKE(length + CONFIG_LENGTH, INT8));
 		}
 		var player = players.get();
 		player.set(LOCALID, uniqueId);
@@ -85,7 +85,7 @@ var Player = Module(function(event) {
 		if (!gamePadInUse(gamePadId)) {
 			usedGamePads.push(gamePadId); // reserve this gamepad as used.
 		}
-		event.emit("connect", player);
+		EMIT_EVENT("connect", player);
 	}
 
 	function playerOneSwapInput() {
@@ -98,7 +98,7 @@ var Player = Module(function(event) {
 					playerOne.set(GAMEPAD, gamepad);
 					usedGamePads.push(gamepad); // reserve this gamepad as used.
 					playerOneUsingGamepad = true;
-					event.emit("change", playerOne);
+					EMIT_EVENT("change", playerOne);
 					return true;
 				}
 			}
@@ -109,7 +109,7 @@ var Player = Module(function(event) {
 			}
 			playerOne.set(GAMEPAD, -1);
 			playerOneUsingGamepad = false;
-			event.emit("change", playerOne);
+			EMIT_EVENT("change", playerOne);
 			return true;
 		}
 	}

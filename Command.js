@@ -30,7 +30,7 @@ var Command = Module(function(event) {
 	function executeCommand(command, deltaTime) {
 		var timeStamp = command.get(COMMAND_TIMESTAMP);
 		if (time.now() >= timeStamp) {
-			event.emit("executeCommand", command, deltaTime, TIME_NOW() - timeStamp);
+			EMIT_EVENT("executeCommand", command, deltaTime, TIME_NOW() - timeStamp);
 			LIST_PUSH(command);
 			return true;
 		} else {

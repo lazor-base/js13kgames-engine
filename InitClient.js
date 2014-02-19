@@ -44,7 +44,7 @@ var Init = (function(Module, Load) {
 		function scriptsReady() {
 			scriptsLength--;
 			if (scriptsLength === 0) {
-				event.emit("loadLocal");
+				EMIT_EVENT("loadLocal");
 			}
 		}
 

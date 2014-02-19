@@ -41,7 +41,7 @@ var Config = Module(function() {
 			hardware[type] = {};
 		}
 		if (!hardware[type][uniqueId]) {
-			hardware[type][uniqueId] = LIST_GET(actions, "s8");
+			hardware[type][uniqueId] = LIST_GET(actions, INT8);
 		}
 	}
 	// end functions

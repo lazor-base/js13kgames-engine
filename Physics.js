@@ -27,7 +27,7 @@ var Physics = Module(function() {
 	}
 
 	function getf32List(size) {
-		return LIST_GET(size, "f32");
+		return LIST_GET(size, FLOAT32);
 	}
 
 	function getValue(list, index) {

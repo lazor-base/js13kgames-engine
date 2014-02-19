@@ -20,7 +20,7 @@ var Load = Module(function(event) {
 	}
 
 	function getReady() {
-		event.emit("loading");
+		EMIT_EVENT("loading");
 	}
 
 	event.on("loading", function() {

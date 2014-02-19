@@ -52,7 +52,7 @@ var GUI = (function(document) {
 				isReady = document.readyState === "complete";
 				setTimeout(testReadyState, 10);
 			} else {
-				event.emit("ready");
+				EMIT_EVENT("ready");
 			}
 		};
 		setTimeout(testReadyState, 10);
