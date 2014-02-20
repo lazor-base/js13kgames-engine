@@ -309,6 +309,14 @@ var List = Module(function() {
 			}
 		},
 		set: function(index, value) {
+			if(index >= this.indexes.length) {
+				console.trace();
+				throw new Error("Index out of bounds!")
+			}
+			if(index === undefined) {
+				console.trace();
+				throw new Error("Undefined index!");
+			}
 			var internalIndex = this.indexes[index];
 			var view = this.views[index];
 			var name = this.types[index];
@@ -322,6 +330,14 @@ var List = Module(function() {
 			return setFunctions(name, bufferView, internalIndex, value);
 		},
 		get: function(index) {
+			if(index >= this.indexes.length) {
+				console.trace();
+				throw new Error("Index out of bounds!")
+			}
+			if(index === undefined) {
+				console.trace();
+				throw new Error("Undefined index!");
+			}
 			var internalIndex = this.indexes[index];
 			var view = this.views[index];
 			var name = this.types[index];
