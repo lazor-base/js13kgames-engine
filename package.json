@@ -1,0 +1,21 @@
+// copyFile: true
+{
+	"main": "index.html",
+	"name": "RTS",
+	"description": "RTS Game Client",
+	"version": "0.1.0a",
+	"keywords": ["node-webkit", "rts"],
+	"window": {
+		"title": "rts",
+		"toolbar": true,
+		"frame": true,
+		"width": 800,
+		"height": 500,
+		"position": "center",
+		"min_width": 400,
+		"min_height": 200
+	},
+	"webkit": {
+		"plugin": true
+	}
+}

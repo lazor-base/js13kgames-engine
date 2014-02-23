@@ -26,6 +26,8 @@ var Map = Module(function(event) {
 	var oldViewPortX = viewPortX;
 	var oldViewPortY = viewPortY;
 	var oldViewPortZ = viewPortZ;
+	var oldWidth = 0;
+	var oldHeight = 0;
 	var firstRun = true;
 	// end variables
 
@@ -142,27 +144,60 @@ var Map = Module(function(event) {
 
 	function cleanChunks(attr) {
 		if (onScreen.indexOf(attr) === -1) {
-			if (chunks.current[attr].Renderable) {
+			if (chunks.current[attr] && chunks.current[attr].Renderable) {
 				chunks.current[attr].Renderable = false;
 				chunks.old.push(chunks.current[attr]);
 			}
-			delete chunks.current[attr];
+			// delete chunks.current[attr];
+			chunks.current[attr] = null;
 		}
+	}
+
+	function Mixed(X, Z) {
+		if (firstRun) {
+			var chunk = makeChunk(X, Z);
+			drawMap(chunk);
+		} else if (chunks.current[X + "," + Z] && chunks.current[X + "," + Z].Renderable) {
+			drawMap(chunks.current[X + "," + Z]);
+		} else {
+			LOOP_QUEUE(5, function(X, Z) {
+				var chunk = makeChunk(X, Z);
+				drawMap(chunk);
+			}, [X, Z]);
+		}
+	}
+
+	function Staggered(X, Z) {
+		LOOP_QUEUE(5, function(X, Z) {
+			var chunk = makeChunk(X, Z);
+			drawMap(chunk);
+		}, [X, Z]);
+	}
+
+	function AllAtOnce(X, Z) {
+		var chunk = makeChunk(X, Z);
+		drawMap(chunk);
 	}
 
 	function divideScreen(force) {
 		console.clear();
 		console.time("divide screen")
-
 		onScreen.length = 0;
 		var width = window.innerWidth;
 		var height = window.innerHeight;
+		console.log(width, height)
 		var chunkPixelSize = BLOCK_SIZE * numberOfBlocksPerAxis;
 		var verticalChunks = height / chunkPixelSize;
 		var horizontalChunks = width / chunkPixelSize;
 		var Xcoordinate = Math.floor(-viewPortX / chunkPixelSize);
 		var Zcoordinate = Math.floor(-viewPortZ / chunkPixelSize);
-		if (oldViewPortX !== viewPortX || oldViewPortZ !== viewPortZ || force) {
+		var differentX = oldViewPortX !== viewPortX;
+		var differentY = viewPortY !== oldViewPortY;
+		var differentZ = oldViewPortZ !== viewPortZ;
+		var differentWidth = oldWidth !== width;
+		var differentHeight = oldHeight !== height;
+		var chunkChange = false;
+		if (differentWidth || differentHeight || differentX || differentZ || force) {
 			for (var i = -1; i < verticalChunks + 1; i++) {
 				for (var e = -1; e < horizontalChunks + 1; e++) {
 					onScreen.push((Xcoordinate + e) + "," + (Zcoordinate + i));
@@ -172,8 +207,9 @@ var Map = Module(function(event) {
 			for (var attr in chunks.current) {
 				cleanChunks(attr);
 			}
+			chunkChange = true;
 		}
-		if (viewPortY !== oldViewPortY || oldViewPortX !== viewPortX || oldViewPortZ !== viewPortZ || force) {
+		if (differentWidth || differentHeight || differentY || chunkChange || force) {
 			while (textHost.children.length) {
 				textHost.removeChild(textHost.children[0]);
 			}
@@ -188,32 +224,8 @@ var Map = Module(function(event) {
 				for (var e = -1; e < horizontalChunks + 1; e++) {
 					var X = Xcoordinate + e;
 					var Z = Zcoordinate + i;
-					/////////////////
-					//  MIXED //
-					/////////////////
-					if (firstRun) {
-						var chunk = makeChunk(X, Z);
-						drawMap(chunk);
-					} else if (chunks.current[X + "," + Z] && chunks.current[X + "," + Z].Renderable) {
-						drawMap(chunks.current[X + "," + Z]);
-					} else {
-						LOOP_QUEUE(5, function(X, Z) {
-							var chunk = makeChunk(X, Z);
-							drawMap(chunk);
-						}, [X, Z]);
-					}
-					////////////////////
-					// STAGGERED //
-					////////////////////
-					// LOOP_QUEUE(5, function(X, Z) {
-						// var chunk = makeChunk(X, Z);
-						// drawMap(chunk);
-					// }, [X, Z]);
-					//////////////////////
-					// ALL AT ONCE //
-					//////////////////////
-					// var chunk = makeChunk(X, Z);
-					// drawMap(chunk);
+					// optional Staggered or AllAtOnce
+					Mixed(X, Z);
 				}
 			}
 		}
@@ -221,6 +233,8 @@ var Map = Module(function(event) {
 		oldViewPortX = viewPortX;
 		oldViewPortY = viewPortY;
 		oldViewPortZ = viewPortZ;
+		oldWidth = width;
+		oldHeight = height;
 		firstRun = false;
 		console.timeEnd("divide screen")
 	}

@@ -99,16 +99,6 @@ var Draw = Module(function(event) {
 	GUI_ON("ready", function() {
 		stage = new PIXI.Stage();
 		renderer = new PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight, null, true);
-		var resizeTimeout;
-		window.addEventListener("resize", function() {
-			renderer.resize(window.innerWidth, window.innerHeight);
-			if (resizeTimeout) {
-				clearTimeout(resizeTimeout);
-			}
-			resizeTimeout = setTimeout(function(){
-				EMIT_EVENT("resize");
-			},500);
-		});
 		// amount = (renderer instanceof PIXI.WebGLRenderer) ? 50 : 5;
 		// if (amount == 5) {
 		// 	renderer.context.mozImageSmoothingEnabled = false;

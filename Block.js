@@ -9,9 +9,6 @@ var Block = Module(function(event) {
 
 	// functions
 
-///////////
-// DEOPT //
-///////////
 	function defaultBlockDraw(graphic, block, x, y, z, heightMapData, blockData) {
 		var blockWidth = block[BLOCK_WIDTH];
 		var blockDepth = block[BLOCK_DEPTH];

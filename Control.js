@@ -241,12 +241,24 @@ var Control = (function(navigator) {
 			EMIT_EVENT("change", localId, action, value, player);
 		}
 
+		function touchStart(e) {
+			var touches = e.changedTouches;
+			changeKey(MOUSE, 0, MOUSE_LEFT_CLICK, ACTIVE, e);
+		}
+
+		function touchEnd(e) {
+			var touches = e.changedTouches;
+			changeKey(MOUSE, 0, MOUSE_LEFT_CLICK, INACTIVE, e);
+		}
+
 		function listen(node, type) {
 			if (type === MOUSE) {
 				node[addEventListener]("mousedown", pressEvent);
 				node[addEventListener]("mouseup", releaseEvent);
 				node[addEventListener]("mousemove", moveEvent);
 				node[addEventListener]("mousewheel", scrollEvent);
+				node[addEventListener]("touchstart", touchStart);
+				node[addEventListener]("touchend", touchEnd);
 				node[addEventListener]("touchmove", touchMoveEvent);
 				LOOP_EVERY(0, function() {
 					changeKey(MOUSE, 0, MOUSE_MOVE_X, mousex);

@@ -8,6 +8,7 @@ var GUI = (function(document) {
 		// end variables
 
 		// functions
+
 		function getGUI(id) {
 			return document.getElementById(id);
 		}
@@ -56,6 +57,17 @@ var GUI = (function(document) {
 			}
 		};
 		setTimeout(testReadyState, 10);
+
+		var resizeTimeout;
+		window.addEventListener("resize", function() {
+			renderer.resize(window.innerWidth, window.innerHeight);
+			if (resizeTimeout) {
+				clearTimeout(resizeTimeout);
+			}
+			resizeTimeout = setTimeout(function() {
+				EMIT_EVENT("resize");
+			}, 500);
+		});
 		// end other
 
 		return {
