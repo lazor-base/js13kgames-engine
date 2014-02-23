@@ -10,9 +10,21 @@ var Loop = Module(function(event) {
 	var intervals = [];
 	var intervalTicks = [];
 	var loop;
+	var timeEstimates = [];
+	var queuedFunctions = [];
+	var queuedParameters = [];
+	var queueLength = 0;
 	// end variables
 
 	// functions
+
+	function queue(timeEstimate, functiontoQueue, parameters) {
+		timeEstimates.push(timeEstimate);
+		queuedFunctions.push(functiontoQueue);
+		queuedParameters.push(parameters);
+		queueLength++;
+	}
+
 	function nextFrame(callback) {
 		if (typeof requestAnimationFrame === "function") {
 			return requestAnimationFrame(callback);
@@ -32,7 +44,7 @@ var Loop = Module(function(event) {
 		if (stop === false) {
 			lastTick = currentTick;
 			currentTick = TIME_MICRO();
-			EMIT_EVENT("nextFrame");
+			EMIT_EVENT("nextFrame", currentTick - lastTick);
 			for (var i = 0; i < intervals.length; i++) {
 				if (stop) {
 					return true;
@@ -49,20 +61,37 @@ var Loop = Module(function(event) {
 	}
 
 	function every(interval, callback) {
-		if (intervals.indexOf("" + interval) === -1) {
-			intervals.push("" + interval);
+		var intervalString = "" + interval;
+		if (intervals.indexOf(intervalString) === -1) {
+			intervals.push(intervalString);
 			intervalTicks.push(TIME_MICRO());
 		}
-		event.on("" + interval, callback);
+		event.on(intervalString, callback);
 	}
 	// end functions
 
 	// other
+	event.on("nextFrame", function(timeDelta) {
+		var timeOccupied = 0;
+		var done = false;
+		while (queueLength > 0 && done === false) {
+			if (timeEstimates[timeEstimates.length - 1] + timeOccupied < 10) {
+				queueLength--;
+				var params = queuedParameters.pop();
+				var fn = queuedFunctions.pop();
+				timeOccupied += timeEstimates.pop();
+				fn.apply(null, params);
+			} else {
+				done = true;
+			}
+		}
+	});
 	// end other
 
 	return {
 		// return
 		go: go,
+		queue: queue,
 		every: every,
 		on: event.on,
 		// end return

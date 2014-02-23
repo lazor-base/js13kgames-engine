@@ -45,15 +45,29 @@ var Game = Module(function(event) {
 				}
 			}
 		});
-		Map.divideScreen();
+		Map.divideScreen(true);
 		GUI_ON("resize", function() {
 			Map.divideScreen();
 		});
 		LOOP_EVERY(0, function(deltaTime) {
 			// console.clear();
 		});
+		// setTimeout(function() {
+			// console.warn("STOPPING TIME")
+			// console.timelineEnd();
+			// console.profileEnd();
+			// LOOP_GO(false);
+		// }, 1000);
 		LOOP_GO(true);
+		// console.timeline();
+		// console.profile();
+		// var worker = new Worker('WebWorker.js');
 
+		// worker.addEventListener('message', function(e) {
+		// 	console.log('Worker said: ', e.data);
+		// }, false);
+
+		// worker.postMessage('Hello World'); // Send data to our worker.
 	}
 
 	function setup() {
@@ -64,20 +78,8 @@ var Game = Module(function(event) {
 		CONFIG_BIND(MOUSE, 0, MOUSE_LEFT, MOUSE_LEFT_CLICK);
 		CONFIG_BIND(MOUSE, 0, SCROLL_Y, MOUSE_WHEEL_Y);
 		CONTROL_LISTEN(document, MOUSE);
-		BLOCK_MAKE(0, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, function(graphic, x, y, color, alpha) {
-			// graphic.width = BLOCK_SIZE;
-			// graphic.height = BLOCK_SIZE;
-			// graphic.beginFill(0x000000, 0);
-			// graphic.drawRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
-			// graphic.endFill();
-		});
-		BLOCK_MAKE(1, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, function(graphic, x, y, color, alpha) {
-			graphic.width = BLOCK_SIZE;
-			graphic.height = BLOCK_SIZE;
-			graphic.beginFill(color, alpha);
-			graphic.drawRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
-			graphic.endFill();
-		});
+		BLOCK_MAKE(0, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+		BLOCK_MAKE(1, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 	}
 	// end functions
 	// other

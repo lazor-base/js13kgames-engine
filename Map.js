@@ -8,18 +8,25 @@ var Map = Module(function(event) {
 		current: {},
 		old: []
 	};
-	var chunkHeight = 16;
-	var chunkDimention = 16;
-	var chunkYAmmount = chunkHeight / chunkDimention;
-	var chunkSection = chunkDimention * chunkDimention * chunkDimention;
-	var chunkFlatDimention = chunkDimention * chunkDimention;
+	var chunkHeight = CHUNK_HEIGHT;
+	var numberOfBlocksPerAxis = CHUNK_DIMENTION;
+	var numberOfYChunks = chunkHeight / numberOfBlocksPerAxis;
+	var numberOfBlocksPerChunk = numberOfBlocksPerAxis * numberOfBlocksPerAxis * numberOfBlocksPerAxis;
+	var numberOfBlocksPerYAxis = numberOfBlocksPerAxis * numberOfBlocksPerAxis;
 	var graphics = new PIXI.Graphics();
 	var textHost = new PIXI.DisplayObjectContainer();
+	var worker = new Worker('WebWorker.js');
+	var onScreen = [];
+	var blockCache = {};
 	var mapOffsetX = 0;
 	var mapOffsetY = 0;
 	var viewPortX = 0;
 	var viewPortY = 0;
 	var viewPortZ = 0;
+	var oldViewPortX = viewPortX;
+	var oldViewPortY = viewPortY;
+	var oldViewPortZ = viewPortZ;
+	var firstRun = true;
 	// end variables
 
 	// functions
@@ -48,8 +55,8 @@ var Map = Module(function(event) {
 			} else {
 				viewPortY++;
 			}
-			if (viewPortY > chunkDimention - 2) { // always show ground (15) layer
-				viewPortY = chunkDimention - 2;
+			if (viewPortY > numberOfBlocksPerAxis - 2) { // always show ground (15) layer
+				viewPortY = numberOfBlocksPerAxis - 2;
 			}
 			if (viewPortY < 0) {
 				viewPortY = 0;
@@ -76,84 +83,40 @@ var Map = Module(function(event) {
 		if (chunks.current[positionX + "," + positionZ]) {
 			return chunks.current[positionX + "," + positionZ];
 		}
-		Math.seedrandom("seed" + positionX + positionZ);
 		var chunk;
 		if (chunks.old.length) {
 			recycledChunk = true
-			console.time("recycled chunk")
+			// console.time("recycled chunk")
 			chunk = chunks.old.pop();
-			chunk.Data = LIST_CLEAN(chunk.Data);
+			chunk.Data = new Int8Array(4);
 			chunk.Biomes;
 			chunk.HeightMap;
+			chunk.Blocks;
+			chunk.BlockData = new Uint8Array(numberOfBlocksPerChunk);
 		} else {
-			console.time("chunk")
-			var data = LIST_GET(4, INT16);
-			var biomes = LIST_GET(chunkFlatDimention, UINT8);
-			var height = LIST_GET(chunkFlatDimention, UINT8);
+			// console.time("chunk")
+			var data = new Int16Array(4);
+			var biomes = new Uint8Array(numberOfBlocksPerYAxis);
+			var height = new Uint8Array(numberOfBlocksPerYAxis);
+			var blocks = new Uint16Array(numberOfBlocksPerChunk);
+			var blockData = new Uint8Array(numberOfBlocksPerChunk);
 			chunk = {
+				Renderable: false,
 				Data: data,
 				Biomes: biomes,
 				HeightMap: height,
-				Sections: []
+				Blocks: blocks,
+				BlockData: blockData
 			};
 		}
-		chunk.Data.set(CHUNK_X, positionX);
-		chunk.Data.set(CHUNK_Z, positionZ);
-		// Sections
-		for (var i = 0; i < chunkYAmmount; i++) {
-			if (chunk.Sections[i]) {
-				chunk.Sections[i].Blocks;
-				chunk.Sections[i].Data = LIST_CLEAN(chunk.Sections[i].Data);
-			} else {
-				var blocks = LIST_GET(chunkSection, UINT16);
-				var data = LIST_GET(chunkSection, UINT8);
-				var sectionData = {
-					Blocks: blocks,
-					Data: data
-				};
-				chunk.Sections.push(sectionData);
-			}
-			// var simplex = new SimplexNoise(Math.random);
-			var previousZBlock = 0;
-			for (var z = 0; z < chunkDimention; z++) {
-				var previousXBlock = 0;
-				for (var x = 0; x < chunkDimention; x++) {
-					var heightMapSet = false;
-					var previousYBlock = 0;
-					for (var y = chunkDimention - 1; y > -1; y--) {
-						var internalCoordinateX = (((y * chunkDimention + z) * chunkDimention + (x - 1))) || 0;
-						var internalCoordinateZ = (((y * chunkDimention + (z - 1)) * chunkDimention + x)) || 0;
-						if (internalCoordinateX < 0) {
-							internalCoordinateX = 0;
-						}
-						if (internalCoordinateZ < 0) {
-							internalCoordinateZ = 0;
-						}
-						previousXBlock = chunk.Sections[i].Blocks.get(internalCoordinateX);
-						previousZBlock = chunk.Sections[i].Blocks.get(internalCoordinateZ);
-						var data = chunkBlockAlgorithm(x, y, z, previousXBlock, previousYBlock, previousZBlock);
-						// var data = round(simplex.noise3D(x, y, z));
-						// 	var data = round(getRandomInt(-1, 5));
-						var internalCoordinate = ((y * chunkDimention + z) * chunkDimention + x);
-						chunk.Sections[i].Blocks.set(internalCoordinate, data);
-						previousYBlock = data;
-					}
-					for (var y = 0; y < chunkDimention; y++) {
-						var internalCoordinate = ((y * chunkDimention + z) * chunkDimention + x);
-						var data = chunk.Sections[i].Blocks.get(internalCoordinate);
-						if (heightMapSet === false && data > 0) {
-							heightMapSet = true;
-							chunk.HeightMap.set((z * chunkDimention) + x, y);
-						}
-					}
-				}
-			}
-		}
+		chunk.Data[CHUNK_X] = positionX;
+		chunk.Data[CHUNK_Z] = positionZ;
+		worker.postMessage([BUILD_CHUNK, positionX, positionZ, chunk.Blocks.buffer, chunk.BlockData.buffer, chunk.HeightMap.buffer], [chunk.Blocks.buffer, chunk.BlockData.buffer, chunk.HeightMap.buffer]);
 		chunks.current[positionX + "," + positionZ] = chunk;
 		if (recycledChunk) {
-			console.timeEnd("recycled chunk");
+			// console.timeEnd("recycled chunk");
 		} else {
-			console.timeEnd("chunk");
+			// console.timeEnd("chunk");
 		}
 		return chunk;
 	}
@@ -173,134 +136,142 @@ var Map = Module(function(event) {
 			var data = 0;
 		} else {
 			var data = round(getRandomInt(-1, 9));
-			// var data = round(simplex.noise3D(x, y, z));
 		}
 		return data;
 	}
 
-	function divideScreen() {
-		var onScreen = [];
-		console.clear();
-		while (textHost.children.length) {
-			textHost.removeChild(textHost.children[0]);
+	function cleanChunks(attr) {
+		if (onScreen.indexOf(attr) === -1) {
+			if (chunks.current[attr].Renderable) {
+				chunks.current[attr].Renderable = false;
+				chunks.old.push(chunks.current[attr]);
+			}
+			delete chunks.current[attr];
 		}
-		graphics.position.x = 0;
-		textHost.position.x = 0;
-		graphics.position.y = 0;
-		textHost.position.y = 0;
-		mapOffsetX = 0;
-		mapOffsetY = 0;
-		graphics.clear();
+	}
 
+	function divideScreen(force) {
+		console.clear();
+		console.time("divide screen")
+
+		onScreen.length = 0;
 		var width = window.innerWidth;
 		var height = window.innerHeight;
-		var chunkPixelSize = BLOCK_SIZE * chunkDimention;
-		// var horizontalChunks = Math.floor(width / tileSize) + 1;
-		// var verticalChunks = Math.floor(height / tileSize) + 1;
-		// var Xcoordinate = Math.floor(-viewPortX / tileSize);
-		// var Zcoordinate = Math.floor(-viewPortZ / tileSize);
-		// var realX = Xcoordinate;
-		// var realZ = Zcoordinate;
-		// var chunkTime = 0;
-		// var mapTime = 0;
-		// for (var i = -1; i < horizontalChunks; i++) {
-		// 	// for (var i = 0; i < 1; i++) {
-		// 	realX = Xcoordinate + i;
-		// 	for (var e = -1; e < verticalChunks; e++) {
-		// 		// for (var e = 0; e < 1; e++) {
-		// 		realZ = Zcoordinate + e;
-		// 		onScreen.push(realX + "," + realZ);
-		// 		var start1 = performance.now();
-		// 		var chunk = makeChunk(realX, realZ);
-		// 		chunkTime += performance.now() - start1;
-		// 		var start2 = performance.now();
-		// 		drawMap(chunk, i, e);
-		// 		mapTime += performance.now() - start2;
-		// 		// Zcoordinate++;
-		// 	}
-		// 	// Xcoordinate++;
-		// }
-		// console.log(Math.ceil(Zcoordinate, -viewPortZ / tileSize) - 1, Math.floor(-viewPortZ / tileSize) - 1, Math.round(-viewPortZ / tileSize) - 1, (-viewPortZ / tileSize) - 1)
+		var chunkPixelSize = BLOCK_SIZE * numberOfBlocksPerAxis;
 		var verticalChunks = height / chunkPixelSize;
 		var horizontalChunks = width / chunkPixelSize;
 		var Xcoordinate = Math.floor(-viewPortX / chunkPixelSize);
 		var Zcoordinate = Math.floor(-viewPortZ / chunkPixelSize);
-		for (var i = -1; i < verticalChunks+1; i++) {
-			for (var e = -1; e < horizontalChunks+1; e++) {
-				var chunk = makeChunk(0,0);
-				drawMap(chunk, 0,0);
-				var chunk = makeChunk(Xcoordinate+e,Zcoordinate+i);
-				drawMap(chunk, Xcoordinate+e,Zcoordinate+i);
+		if (oldViewPortX !== viewPortX || oldViewPortZ !== viewPortZ || force) {
+			for (var i = -1; i < verticalChunks + 1; i++) {
+				for (var e = -1; e < horizontalChunks + 1; e++) {
+					onScreen.push((Xcoordinate + e) + "," + (Zcoordinate + i));
+				}
+			}
+
+			for (var attr in chunks.current) {
+				cleanChunks(attr);
 			}
 		}
-
-		for (var attr in chunks.current) {
-			if (onScreen.indexOf(attr) === -1) {
-				chunks.old.push(chunks.current[attr]);
-				delete chunks.current[attr];
+		if (viewPortY !== oldViewPortY || oldViewPortX !== viewPortX || oldViewPortZ !== viewPortZ || force) {
+			while (textHost.children.length) {
+				textHost.removeChild(textHost.children[0]);
 			}
-		}
-		// console.log(chunkTime, mapTime)
-
-	}
-
-	function color(number) {
-		var hex = (15 - number).toString(16);
-		var string = hex + hex + hex + hex + hex + hex;
-		return parseInt(string, 16);
-	}
-
-	function drawMap(chunk, chunkX, chunkZ) {
-		console.time("render Chunk");
-		for (var i = 0; i < chunk.Sections.length; i++) {
-			var blockList = chunk.Sections[i].Blocks;
-			for (var z = 0; z < chunkDimention; z++) {
-				for (var x = 0; x < chunkDimention; x++) {
-					var drawn = false;
-					var heightMapData = chunk.HeightMap.get((z * chunkDimention) + x);
-					// console.log(viewPortY > heightMapData, viewPortY, heightMapData)
-					if (viewPortY > heightMapData) {
-						for (var y = viewPortY; y < chunkDimention; y++) {
-							var internalCoordinate = ((y * chunkDimention + z) * chunkDimention + x);
-							var blockId = blockList.get(internalCoordinate);
-							if (!drawn && blockId) {
-								drawn = true;
-								var style = color(y);
-								var block = BLOCK_GET(blockId);
-								var xCoordinate = (x * BLOCK_SIZE) + viewPortX - (chunkX * -512);
-								var yCoordinate = (z * BLOCK_SIZE) + viewPortZ-(chunkZ*-512);
-								block.drawFn(graphics, xCoordinate, yCoordinate, style, 1);
-								y = chunkDimention;
-							}
-						}
+			graphics.position.x = 0;
+			textHost.position.x = 0;
+			graphics.position.y = 0;
+			textHost.position.y = 0;
+			mapOffsetX = 0;
+			mapOffsetY = 0;
+			graphics.clear();
+			for (var i = -1; i < verticalChunks + 1; i++) {
+				for (var e = -1; e < horizontalChunks + 1; e++) {
+					var X = Xcoordinate + e;
+					var Z = Zcoordinate + i;
+					/////////////////
+					//  MIXED //
+					/////////////////
+					if (firstRun) {
+						var chunk = makeChunk(X, Z);
+						drawMap(chunk);
+					} else if (chunks.current[X + "," + Z] && chunks.current[X + "," + Z].Renderable) {
+						drawMap(chunks.current[X + "," + Z]);
 					} else {
-						var style = color(heightMapData);
-						var internalCoordinate = ((heightMapData * chunkDimention + z) * chunkDimention + x);
-						var blockId = blockList.get(internalCoordinate);
-						if (blockId) {
-							var block = BLOCK_GET(blockId);
-							var xCoordinate = (x * BLOCK_SIZE) + viewPortX - (chunkX * -512);
-								var yCoordinate = (z * BLOCK_SIZE) + viewPortZ - (chunkZ*-512);
-							block.drawFn(graphics, xCoordinate, yCoordinate, style, 1);
-						}
+						LOOP_QUEUE(5, function(X, Z) {
+							var chunk = makeChunk(X, Z);
+							drawMap(chunk);
+						}, [X, Z]);
 					}
+					////////////////////
+					// STAGGERED //
+					////////////////////
+					// LOOP_QUEUE(5, function(X, Z) {
+						// var chunk = makeChunk(X, Z);
+						// drawMap(chunk);
+					// }, [X, Z]);
+					//////////////////////
+					// ALL AT ONCE //
+					//////////////////////
+					// var chunk = makeChunk(X, Z);
+					// drawMap(chunk);
 				}
 			}
 		}
-		var text = new PIXI.Text(chunk.Data.get(CHUNK_X) + "," + chunk.Data.get(CHUNK_Z) + "," + chunkX + "," + chunkZ, {
-			font: "50px Arial",
-			fill: "red"
-		});
-		text.position.x = viewPortX-(chunkX * -512);
-		text.position.y = viewPortZ-(chunkZ*-512);
-		textHost.addChild(text);
-		var text = new PIXI.Text("" + viewPortY, {
-			font: "50px Arial",
-			fill: "blue"
-		});
-		text.position.x = window.innerWidth / 2;
-		text.position.y = window.innerHeight / 2;
-		textHost.addChild(text);
+		// console.log(onScreen)
+		oldViewPortX = viewPortX;
+		oldViewPortY = viewPortY;
+		oldViewPortZ = viewPortZ;
+		firstRun = false;
+		console.timeEnd("divide screen")
+	}
+
+	function drawBlock(heightMapData, chunk, x, y, z, xCoordinate, zCoordinate) {
+		var internalCoordinate = ((y * numberOfBlocksPerAxis + z) * numberOfBlocksPerAxis + x);
+		var blockId = chunk.Blocks[internalCoordinate];
+		if (blockId) {
+			var blockData = chunk.BlockData[internalCoordinate] || 0;
+			if (!blockCache[blockId]) {
+				blockCache[blockId] = BLOCK_GET(blockId);
+			}
+			var block = blockCache[blockId];
+			block.drawFn(graphics, block, xCoordinate, y, zCoordinate, heightMapData, blockData);
+		}
+	}
+
+	function drawPartialChunk(chunk, x, z, chunkX, chunkZ) {
+		var drawn = false;
+		var heightMapData = chunk.HeightMap[(z * numberOfBlocksPerAxis) + x];
+		var xCoordinate = (x * BLOCK_SIZE) + viewPortX - (chunkX * -512);
+		var zCoordinate = (z * BLOCK_SIZE) + viewPortZ - (chunkZ * -512);
+		if (viewPortY > heightMapData) {
+			for (var y = viewPortY; y < numberOfBlocksPerAxis; y++) {
+				return drawBlock(heightMapData, chunk, x, y, z, xCoordinate, zCoordinate);
+			}
+		} else { // if we aren't looking underground, run this
+			return drawBlock(heightMapData, chunk, x, heightMapData, z, xCoordinate, zCoordinate);
+		}
+	}
+
+	function drawMap(chunk) {
+		if (!chunk.Renderable) {
+			return false;
+		}
+		console.time("render Chunk");
+		var chunkX = chunk.Data[CHUNK_X];
+		var chunkZ = chunk.Data[CHUNK_Z];
+		var blockList = chunk.Blocks;
+		for (var z = 0; z < numberOfBlocksPerAxis; z++) {
+			for (var x = 0; x < numberOfBlocksPerAxis; x++) {
+				drawPartialChunk(chunk, x, z, chunkX, chunkZ);
+			}
+		}
+		// var text = new PIXI.Text(chunkX + "," + chunkZ, {
+		// 	font: "50px Arial",
+		// 	fill: "red"
+		// });
+		// text.position.x = viewPortX - (chunkX * -512);
+		// text.position.y = viewPortZ - (chunkZ * -512);
+		// textHost.addChild(text);
 		console.timeEnd("render Chunk");
 	}
 	// end functions
@@ -310,6 +281,18 @@ var Map = Module(function(event) {
 		Draw.stage.addChild(graphics);
 		Draw.stage.addChild(textHost);
 	});
+	worker.addEventListener('message', function(e) {
+		if (e.data[OPERATION] === CHUNK_COMPLETE) {
+			var chunk = chunks.current[e.data[X_COORDINATE] + "," + e.data[Z_COORDINATE]];
+			if (chunk) {
+				chunk.HeightMap = new Uint8Array(e.data[HEIGHT_ARRAY]);
+				chunk.Blocks = new Uint8Array(e.data[BLOCK_ARRAY]);
+				chunk.BlockData = new Uint8Array(e.data[DATA_ARRAY]);
+				chunk.Renderable = true;
+				drawMap(chunk);
+			}
+		}
+	}, false);
 	// end other
 
 	return {
