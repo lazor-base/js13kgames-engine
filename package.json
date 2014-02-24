@@ -1,6 +1,6 @@
 // copyFile: true
 {
-	"main": "index.html",
+	"main": "app://RTS/index.html",
 	"name": "RTS",
 	"description": "RTS Game Client",
 	"version": "0.1.0a",

@@ -109,6 +109,9 @@ var Draw = Module(function(event) {
 			renderer.render(stage);
 		});
 	});
+	GUI_ON("resize", function() {
+		renderer.resize(window.innerWidth, window.innerHeight);
+	});
 	// end other
 
 	return {

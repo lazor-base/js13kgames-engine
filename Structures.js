@@ -5,13 +5,14 @@ var Structure = Module(function(event) {
 
 	// variables
 	var structures = {};
+	var Mode = IDLE_MODE;
 	// end variables
 
 	// functions
 
 	function defaultStructureDraw(graphic, structure, x, y, z, heightMapData, structureData) {
-		var structureWidth = structure[BLOCK_WIDTH];
-		var structureDepth = structure[BLOCK_DEPTH];
+		var structureWidth = structure[STRUCTURE_WIDTH];
+		var structureDepth = structure[STRUCTURE_DEPTH];
 		graphic.width = structureWidth;
 		graphic.height = structureDepth;
 		var style = color(y);
@@ -20,23 +21,28 @@ var Structure = Module(function(event) {
 		graphic.endFill();
 	}
 
-	function color(number) {
-		var hex = (15 - number).toString(16);
-		var string = hex + hex + hex + hex + hex + hex;
-		return parseInt(string, 16);
-	}
-
-	function makeStructure(id, width, height, depth, textureFn) {
+	function defineStructure(id, width, height, depth, color, health, textureFn) {
 		if (structures[id]) {
 			throw new Error("Structure ID already exists");
 		}
-		var structure = new Uint16Array(4);
-		structure[BLOCK_ID] = id;
-		structure[BLOCK_WIDTH] = width;
-		structure[BLOCK_HEIGHT] = height;
-		structure[BLOCK_DEPTH] = depth;
+		var structure = new Uint16Array(STRUCTURE_DEFINITION_ENTRIES);
+		structure[STRUCTURE_ID] = id;
+		structure[STRUCTURE_WIDTH] = width;
+		structure[STRUCTURE_HEIGHT] = height;
+		structure[STRUCTURE_DEPTH] = depth;
+		structure[STRUCTURE_COLOR] = color;
+		structure[STRUCTURE_HEALTH] = health;
 		structure.drawFn = textureFn || defaultBlockDraw;
 		structures[id] = structure;
+	}
+
+	function placeStructure(id, x, y, z) {
+		var structure = new Uint16Array(STRUCTURE_ENTRIES);
+		structure.set(structures[id]);
+		structure[STRUCTURE_X] = x;
+		structure[STRUCTURE_Y] = y;
+		structure[STRUCTURE_Z] = z;
+		return structure;
 	}
 
 	function getStructure(id) {
@@ -49,7 +55,8 @@ var Structure = Module(function(event) {
 
 	return {
 		// return
-		make: makeStructure,
+		define: defineStructure,
+		set: placeStructure,
 		get: getStructure
 		// end return
 	};

@@ -60,13 +60,12 @@ var GUI = (function(document) {
 
 		var resizeTimeout;
 		window.addEventListener("resize", function() {
-			renderer.resize(window.innerWidth, window.innerHeight);
 			if (resizeTimeout) {
 				clearTimeout(resizeTimeout);
 			}
 			resizeTimeout = setTimeout(function() {
 				EMIT_EVENT("resize");
-			}, 500);
+			}, 50);
 		});
 		// end other
 

@@ -108,7 +108,8 @@ var Map = Module(function(event) {
 				Biomes: biomes,
 				HeightMap: height,
 				Blocks: blocks,
-				BlockData: blockData
+				BlockData: blockData,
+				Structures: [],
 			};
 		}
 		chunk.Data[CHUNK_X] = positionX;
@@ -144,12 +145,11 @@ var Map = Module(function(event) {
 
 	function cleanChunks(attr) {
 		if (onScreen.indexOf(attr) === -1) {
-			if (chunks.current[attr] && chunks.current[attr].Renderable) {
+			if (chunks.current[attr] && chunks.current[attr].Renderable && chunks.current[attr].Structures.length === 0) {
 				chunks.current[attr].Renderable = false;
 				chunks.old.push(chunks.current[attr]);
+				chunks.current[attr] = null;
 			}
-			// delete chunks.current[attr];
-			chunks.current[attr] = null;
 		}
 	}
 
@@ -181,11 +181,10 @@ var Map = Module(function(event) {
 
 	function divideScreen(force) {
 		console.clear();
-		console.time("divide screen")
+		// console.time("divide screen")
 		onScreen.length = 0;
 		var width = window.innerWidth;
 		var height = window.innerHeight;
-		console.log(width, height)
 		var chunkPixelSize = BLOCK_SIZE * numberOfBlocksPerAxis;
 		var verticalChunks = height / chunkPixelSize;
 		var horizontalChunks = width / chunkPixelSize;
@@ -236,7 +235,7 @@ var Map = Module(function(event) {
 		oldWidth = width;
 		oldHeight = height;
 		firstRun = false;
-		console.timeEnd("divide screen")
+		// console.timeEnd("divide screen")
 	}
 
 	function drawBlock(heightMapData, chunk, x, y, z, xCoordinate, zCoordinate) {
@@ -270,7 +269,7 @@ var Map = Module(function(event) {
 		if (!chunk.Renderable) {
 			return false;
 		}
-		console.time("render Chunk");
+		// console.time("render Chunk");
 		var chunkX = chunk.Data[CHUNK_X];
 		var chunkZ = chunk.Data[CHUNK_Z];
 		var blockList = chunk.Blocks;
@@ -286,7 +285,7 @@ var Map = Module(function(event) {
 		// text.position.x = viewPortX - (chunkX * -512);
 		// text.position.y = viewPortZ - (chunkZ * -512);
 		// textHost.addChild(text);
-		console.timeEnd("render Chunk");
+		// console.timeEnd("render Chunk");
 	}
 	// end functions
 

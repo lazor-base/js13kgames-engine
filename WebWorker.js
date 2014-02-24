@@ -5,7 +5,6 @@ var numberOfBlocksPerAxis = CHUNK_DIMENTION;
 var numberOfYChunks = chunkHeight / numberOfBlocksPerAxis;
 var numberOfBlocksPerChunk = numberOfBlocksPerAxis * numberOfBlocksPerAxis * numberOfBlocksPerAxis;
 var numberOfBlocksPerYAxis = numberOfBlocksPerAxis * numberOfBlocksPerAxis;
-
 function chunkBlockAlgorithm(x, y, z, lastXBlock, lastYBlock, lastZBlock) {
 	if (y === 15) {
 		var data = 1;
@@ -40,6 +39,8 @@ function getRandomInt(min, max) {
 
 self.addEventListener('message', function(event) {
 	if (event.data[OPERATION] === BUILD_CHUNK) {
+		var startTime = Date.now();
+		// console.log("Woker: Recieved chunk to create")
 		var blockArray = new Uint8Array(event.data[BLOCK_ARRAY]);
 		var blockDataArray = new Uint8Array(event.data[DATA_ARRAY]);
 		var heightDataArray = new Uint8Array(event.data[HEIGHT_ARRAY]);
@@ -91,6 +92,7 @@ self.addEventListener('message', function(event) {
 				}
 			}
 		}
+		// console.log("Worker: Sending completed chunk.", Date.now()-startTime)
 		self.postMessage([CHUNK_COMPLETE, XCoord, ZCoord, blockArray.buffer, blockDataArray.buffer, heightDataArray.buffer], [blockArray.buffer, blockDataArray.buffer, heightDataArray.buffer]);
 	}
 }, false);
