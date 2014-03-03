@@ -1,46 +1,15 @@
-var Draw = Module(function(event) {
+Module(function(event) {
+	"use strict";
 	// name: Draw
 	// targets: Client
 	// filenames: Engine
 
 	// variables
 	var stage, renderer;
-	var graphics = [];
-	var sprites = [];
-	var textures = [];
 	// end variables
 
 
 	// functions
-
-	function newGraphic(callback) {
-		var index = graphics.length;
-		var graphic = new PIXI.Graphics();
-		graphics.push(graphic);
-		stage.addChild(graphic);
-		callback(graphic);
-		return index;
-	}
-
-	function getGraphic(index) {
-		return graphics[index];
-	}
-
-	function makeSprite(index, callback) {
-		var sprite = new PIXI.Sprite(textures[index]);
-		callback(sprite);
-		stage.addChild(sprite);
-	}
-
-	function registerTexture(texture) {
-		var index = textures.length;
-		textures.push(texture);
-		return index;
-	}
-
-	function getTexture(index) {
-		return textures[index];
-	}
 
 	function poly(entity, graphic) {
 
@@ -84,19 +53,13 @@ var Draw = Module(function(event) {
 		graphic.rotation = entity.get(ANGLE) * Math.PI / 180;
 	}
 
-	function changeState(context, property, value) {
-		if (context[property] !== value) {
-			context[property] = value;
-		}
-	}
-
-	function clear() {
-		context.clearRect(0, 0, canvas.width, canvas.height);
+	function drawStage() {
+		renderer.render(stage);
 	}
 	// end functions
 
 	// other
-	GUI_ON("ready", function() {
+	GUI_ON("UIReady", function() {
 		stage = new PIXI.Stage();
 		renderer = new PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight, null, true);
 		// amount = (renderer instanceof PIXI.WebGLRenderer) ? 50 : 5;
@@ -105,9 +68,7 @@ var Draw = Module(function(event) {
 		// 	renderer.context.webkitImageSmoothingEnabled = false;
 		// }
 		GUI_PUT(renderer.view);
-		LOOP_EVERY(0, function(deltaTime) {
-			renderer.render(stage);
-		});
+		EMIT_EVENT("RenderReady");
 	});
 	GUI_ON("resize", function() {
 		renderer.resize(window.innerWidth, window.innerHeight);
@@ -116,19 +77,17 @@ var Draw = Module(function(event) {
 
 	return {
 		// return
-		clear: clear,
-		newGraphic: newGraphic,
-		getGraphic: getGraphic,
-		change: changeState,
 		poly: poly,
-		registerTexture: registerTexture,
-		getTexture: getTexture,
-		makeSprite: makeSprite,
 		setup: setupDraw,
 		move: reposition,
+		render:drawStage,
 		get stage() {
-			return stage
-		}
+			return stage;
+		},
+		get renderer() {
+			return renderer;
+		},
+		on:event.on
 		// end return
 	};
 });
