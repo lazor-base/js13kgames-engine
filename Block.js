@@ -1,4 +1,5 @@
-var Block = Module(function(event) {
+var Block = Module(function() {
+	"use strict";
 	// name: Block
 	// targets: Client
 	// filenames: Engine
@@ -9,7 +10,7 @@ var Block = Module(function(event) {
 
 	// functions
 
-	function defaultBlockDraw(graphic, block, x, y, z, heightMapData, blockData) {
+	function defaultBlockDraw(graphic, block, x, y, z) {
 		var blockWidth = block[BLOCK_WIDTH];
 		var blockDepth = block[BLOCK_DEPTH];
 		graphic.width = blockWidth;
@@ -84,4 +85,8 @@ var Block = Module(function(event) {
 		get: getBlock
 		// end return
 	};
-})
+});
+
+if (typeof module !== "undefined") {
+	module.exports = Block;
+}
