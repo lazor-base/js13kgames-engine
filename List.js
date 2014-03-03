@@ -1,13 +1,12 @@
 var List = Module(function() {
+	"use strict";
 	// name: List
 	// target: Client,Test
 	// filenames: Engine,Engine
 	// variables
 	var NULL = null;
-	var created = 0;
 	var LENGTH = "length";
 	var NEXT = "next";
-	var ARRAY = "array";
 	var oldArrays = [];
 	var types = {};
 	types[UINT4] = Uint8Array;
@@ -89,7 +88,7 @@ var List = Module(function() {
 	}
 
 	function pad(width, string, padding) {
-		return (width <= string.length) ? string : pad(width, padding + string, padding)
+		return (width <= string.length) ? string : pad(width, padding + string, padding);
 	}
 
 	function changeCharacter(string, index, value) {
@@ -113,7 +112,7 @@ var List = Module(function() {
 		var binary = toBinaryString(decimal, 8);
 		var offset = 7 - (index & 7); // keeps the number below 8
 		return parseInt(binary[offset], 10);
-	};
+	}
 
 	function get8bit(index, bufferView) {
 		var v = bufferView[index >> 3];
@@ -139,11 +138,9 @@ var List = Module(function() {
 		var binary = toBinaryString(decimal, 8);
 		binary = changeCharacter(binary, offset, value);
 		bufferView[index >> 3] = toDecimal(binary);
-		var decimal = bufferView[index >> 3];
-	};
+	}
 
 	function getBits(bits, index, bufferView) {
-		var startIndex = Math.floor(((index * bits)) / 8);
 		var number = "";
 		for (var i = 0; i < bits; i++) {
 			var offset = (index * bits) + i;
@@ -153,7 +150,6 @@ var List = Module(function() {
 	}
 
 	function setBits(bits, index, value, bufferView) {
-		var startIndex = Math.floor(((index * bits)) / 8);
 		var binaryValue = toBinaryString(value, bits);
 		for (var i = 0; i < bits; i++) {
 			var offset = (index * bits) + i;
@@ -193,8 +189,8 @@ var List = Module(function() {
 						}
 					}
 					if (list.last === array) {
-						if (prev) {
-							list.last = prev;
+						if (previous) {
+							list.last = previous;
 						}
 					}
 				}
@@ -220,9 +216,9 @@ var List = Module(function() {
 
 
 	function getList(entries, description) {
-		if(typeof description === "string") {
+		if (typeof description === "string") {
 			console.trace();
-			throw new Error("Expected description to be a number, instead it was:"+description)
+			throw new Error("Expected description to be a number, instead it was:" + description);
 		}
 		var result;
 
@@ -235,21 +231,7 @@ var List = Module(function() {
 		return result;
 	}
 
-	function nameOf(description) {
-		return description.charAt(1) + description.charAt(2);
-	}
-
 	function Node() {}
-
-	function indexOf(array, item) {
-		var length = array.length;
-		for (var i = length; i--;) {
-			if (array[i] === item) {
-				return i;
-			}
-		}
-		return -1;
-	}
 
 	Node.prototype = {
 		next: NULL,
@@ -283,7 +265,7 @@ var List = Module(function() {
 						index++;
 						if (index > 1279) {
 							if (restart) {
-								throw new Error("There are no more indexes in :" + type)
+								throw new Error("There are no more indexes in :" + type);
 							}
 							restart = true;
 							index = 0;
@@ -309,11 +291,11 @@ var List = Module(function() {
 			}
 		},
 		set: function(index, value) {
-			if(index >= this.indexes.length) {
+			if (index >= this.indexes.length) {
 				console.trace();
-				throw new Error("Index out of bounds!")
+				throw new Error("Index out of bounds!");
 			}
-			if(index === undefined) {
+			if (index === undefined) {
 				console.trace();
 				throw new Error("Undefined index!");
 			}
@@ -330,11 +312,11 @@ var List = Module(function() {
 			return setFunctions(name, bufferView, internalIndex, value);
 		},
 		get: function(index) {
-			if(index >= this.indexes.length) {
+			if (index >= this.indexes.length) {
 				console.trace();
-				throw new Error("Index out of bounds!")
+				throw new Error("Index out of bounds!");
 			}
-			if(index === undefined) {
+			if (index === undefined) {
 				console.trace();
 				throw new Error("Undefined index!");
 			}
@@ -357,64 +339,55 @@ var List = Module(function() {
 		}
 	};
 
-
-	function pushList() {
-		var linkedList = this;
-		for (var i = 0; i < arguments[LENGTH]; i++) {
-			var previous = linkedList.last;
-			var next = arguments[i];
-			if (!linkedList.first) {
-				// we need to set the first node
-				linkedList.first = next;
-			} else {
-				// if the previous node exists, point it to the new node
-				previous[NEXT] = next;
-			}
-			next.prev = previous;
-			next.list = linkedList;
-			linkedList.last = next;
-		}
-	}
-
-	function eachList(fn) {
-		var item;
-		var previous = null;
-		var item = this.first;
-		var next = item[NEXT];
-		do {
-			fn(item);
-			previous = item;
-			if (item.list === null) {
-				if (previous === null) {
-					if (this.first !== item) {
-						item = this.first
-					} else {
-						item = null;
-					}
-				} else {
-					if (previous[NEXT] !== item) {
-						item = previous[NEXT];
-					} else {
-						item = null;
-					}
-				}
-			} else {
-				if (item[NEXT]) {
-					item = item[NEXT];
-				} else {
-					item = null;
-				}
-			}
-		} while (item !== null);
-	}
-
-
-
 	function linked() {
 		var args = arguments;
 		var list = {
-			push: pushList,
-			each: eachList,
+			push: function pushList() {
+				var linkedList = this;
+				for (var i = 0; i < arguments[LENGTH]; i++) {
+					var previous = linkedList.last;
+					var next = arguments[i];
+					if (!linkedList.first) {
+						// we need to set the first node
+						linkedList.first = next;
+					} else {
+						// if the previous node exists, point it to the new node
+						previous[NEXT] = next;
+					}
+					next.prev = previous;
+					next.list = linkedList;
+					linkedList.last = next;
+				}
+			},
+			each: function eachList(fn) {
+				var previous = null;
+				var item = this.first;
+				do {
+					fn(item);
+					previous = item;
+					if (item.list === null) {
+						if (previous === null) {
+							if (this.first !== item) {
+								item = this.first;
+							} else {
+								item = null;
+							}
+						} else {
+							if (previous[NEXT] !== item) {
+								item = previous[NEXT];
+							} else {
+								item = null;
+							}
+						}
+					} else {
+						if (item[NEXT]) {
+							item = item[NEXT];
+						} else {
+							item = null;
+						}
+					}
+				} while (item !== null);
+			},
 			first: NULL,
 			last: NULL
 		};

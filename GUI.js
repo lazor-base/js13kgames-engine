@@ -1,4 +1,5 @@
-var GUI = (function(document) {
+(function(document) {
+		"use strict";
 	// name: GUI
 	// target: Client,Test
 	// filenames: Engine,Engine
@@ -17,7 +18,7 @@ var GUI = (function(document) {
 			if (!parent) {
 				parent = document.body;
 			}
-			return parent.appendChild(node);
+			return parent.insertBefore(node, parent.firstChild);
 		}
 
 		function makeGUI(name) {
@@ -53,7 +54,7 @@ var GUI = (function(document) {
 				isReady = document.readyState === "complete";
 				setTimeout(testReadyState, 10);
 			} else {
-				EMIT_EVENT("ready");
+				EMIT_EVENT("UIReady");
 			}
 		};
 		setTimeout(testReadyState, 10);

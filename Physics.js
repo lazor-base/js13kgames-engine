@@ -1,11 +1,12 @@
 var Physics = Module(function() {
+	"use strict";
 	// name: Physics
 	// target: Client
 	// filenames: Engine
 
 	// variables
 	var axes = [];
-	var edge, axis, verticeList1, verticeList2, axes1, axes2, MTV;
+	var edge, axis, verticeList1, verticeList2, axes1, axes2, MTV, entity1, entity2;
 	var vectors = [];
 	var projections = [];
 	var overlap = 9e9;
@@ -15,15 +16,15 @@ var Physics = Module(function() {
 	// functions
 
 	function dot(vector1, vector2) {
-		return (getValue(vector1, X) * getValue(vector2, X)) + (getValue(vector1, Y) * getValue(vector2, Y));
+		return (getValue(vector1, PHYSICS_X) * getValue(vector2, PHYSICS_X)) + (getValue(vector1, PHYSICS_Y) * getValue(vector2, PHYSICS_Y));
 	}
 
 	function getOverlap(vector1, vector2) {
-		return Math.min(getValue(vector1, Y), getValue(vector2, Y)) - Math.max(getValue(vector1, X), getValue(vector2, X));
+		return Math.min(getValue(vector1, PHYSICS_Y), getValue(vector2, PHYSICS_Y)) - Math.max(getValue(vector1, PHYSICS_X), getValue(vector2, PHYSICS_X));
 	}
 
 	function overlapping(vector1, vector2) {
-		return !(getValue(vector1, X) > getValue(vector2, Y) || getValue(vector2, X) > getValue(vector1, Y));
+		return !(getValue(vector1, PHYSICS_X) > getValue(vector2, PHYSICS_Y) || getValue(vector2, PHYSICS_X) > getValue(vector1, PHYSICS_Y));
 	}
 
 	function getf32List(size) {
@@ -40,13 +41,22 @@ var Physics = Module(function() {
 
 	function setXY(list, x, y, increment) {
 		increment = increment || 0;
-		setValue(list, increment + X, x);
-		setValue(list, increment + Y, y);
+		setValue(list, increment + PHYSICS_X, x);
+		setValue(list, increment + PHYSICS_Y, y);
 	}
 
-	function test(entity1, entity2, callback) {
+	function test(entity1X, entity1Y, entity1W, entity1H, entity1R, entity2X, entity2Y, entity2W, entity2H, entity2R) {
 		// Minimum Translation Vector (MTV)
-		MTV = LIST_CLEAN(MTV);
+		setValue(entity1, PHYSICS_X, entity1X);
+		setValue(entity1, PHYSICS_Y, entity1Y);
+		setValue(entity1, PHYSICS_WIDTH, entity1W);
+		setValue(entity1, PHYSICS_HEIGHT, entity1H);
+		setValue(entity1, PHYSICS_ANGLE, entity1R);
+		setValue(entity2, PHYSICS_X, entity2X);
+		setValue(entity2, PHYSICS_Y, entity2Y);
+		setValue(entity2, PHYSICS_WIDTH, entity2W);
+		setValue(entity2, PHYSICS_HEIGHT, entity2H);
+		setValue(entity2, PHYSICS_ANGLE, entity2R);
 		var vertices1 = rotate(getVertices(entity1, LIST_CLEAN(verticeList1)), entity1);
 		var vertices2 = rotate(getVertices(entity2, LIST_CLEAN(verticeList2)), entity2);
 		var index = -1;
@@ -55,7 +65,7 @@ var Physics = Module(function() {
 		for (var i = 0; i < axes.length; i++) {
 			for (var e = 0; e < axes[i].length; e += 2) {
 				index++;
-				setXY(axis, getValue(axes[i], e + X), getValue(axes[i], e + Y));
+				setXY(axis, getValue(axes[i], e + PHYSICS_X), getValue(axes[i], e + PHYSICS_Y));
 				// project both shapes onto the axis
 				var projection1 = project(axis, entity1, vertices1, LIST_CLEAN(projections[index]));
 				index++;
@@ -64,30 +74,31 @@ var Physics = Module(function() {
 				// do the projections overlap?
 				if (!overlapping(projection1, projection2)) {
 					// then we can guarantee that the shapes do not overlap
-					return callback(false);
+					return false;
 				} else {
 					// get the overlap
 					var projectionOverlap = getOverlap(projection1, projection2);
 					// check for minimum
 					if (projectionOverlap < overlap) {
 						// then set this one as the smallest
-						setXY(MTV, getValue(axis, X), getValue(axis, Y));
-						setValue(MTV, 2, projectionOverlap);
+						MTV[0] = getValue(axis, PHYSICS_X);
+						MTV[1] = getValue(axis, PHYSICS_Y);
+						MTV[2] = getValue(axis, projectionOverlap);
 					}
 				}
 			}
 		}
 		// if we get here then we know that every axis had overlap on it
 		// so we can guarantee an intersection
-		callback(MTV);
+		return MTV;
 	}
 
 	function project(axis, entity, vertices, vector) {
-		setXY(vector, getValue(vertices, X), getValue(vertices, Y));
+		setXY(vector, getValue(vertices, PHYSICS_X), getValue(vertices, PHYSICS_Y));
 		var min = dot(axis, vector);
 		var max = min;
 		for (var i = 0; i < vertices.length; i += 2) {
-			setXY(vector, getValue(vertices, i + X), getValue(vertices, i + Y));
+			setXY(vector, getValue(vertices, i + PHYSICS_X), getValue(vertices, i + PHYSICS_Y));
 			var projection = dot(axis, vector);
 			if (projection < min) {
 				min = projection;
@@ -102,8 +113,8 @@ var Physics = Module(function() {
 
 	function getVertices(entity, vertices, rotated) {
 		// counter clockwise vertices
-		var width = (getValue(entity, WIDTH) / 2);
-		var height = (getValue(entity, HEIGHT) / 2);
+		var width = (getValue(entity, PHYSICS_WIDTH) / 2);
+		var height = (getValue(entity, PHYSICS_HEIGHT) / 2);
 		setValue(vertices, 0, -width); // top left
 		setValue(vertices, 1, -height);
 		setValue(vertices, 2, +width); // top right
@@ -141,9 +152,9 @@ var Physics = Module(function() {
 
 	function rotate(vertices, entity) {
 		for (var i = 0; i < vertices.length; i += 2) {
-			var x = getValue(vertices, i + X);
-			var y = getValue(vertices, i + Y);
-			var angle = getValue(entity, ANGLE) * mathPiDividedBy180;
+			var x = getValue(vertices, i + PHYSICS_X);
+			var y = getValue(vertices, i + PHYSICS_Y);
+			var angle = getValue(entity, PHYSICS_ANGLE) * mathPiDividedBy180;
 			setXY(vertices, ((x * Math.cos(angle)) - (y * Math.sin(angle))), ((x * Math.sin(angle)) + (y * Math.cos(angle))), i);
 		}
 		return vertices;
@@ -151,8 +162,8 @@ var Physics = Module(function() {
 
 	function perpendicular(vector) {
 		// pretty sure you need to detect what is the run and what is the rise in order to do -run/rise for an angled polygon. eg y may be run and x may be rise, if its flipped 90 degrees.
-		var x = getValue(vector, X);
-		var y = getValue(vector, Y);
+		var x = getValue(vector, PHYSICS_X);
+		var y = getValue(vector, PHYSICS_Y);
 		setXY(vector, y, -x);
 		return normalize(vector);
 	}
@@ -161,30 +172,32 @@ var Physics = Module(function() {
 		var lengthSquared = dot(vector, vector);
 		var length = Math.sqrt(lengthSquared);
 		if (length > 0) {
-			setXY(vector, getValue(vector, X) / length, getValue(vector, Y) / length);
+			setXY(vector, getValue(vector, PHYSICS_X) / length, getValue(vector, PHYSICS_Y) / length);
 		}
 		return vector;
 	}
 
 	function subtract(vector1, vector2, result) {
-		setXY(result, getValue(vector1, X) - getValue(vector2, X), getValue(vector1, Y) - getValue(vector2, Y));
+		setXY(result, getValue(vector1, PHYSICS_X) - getValue(vector2, PHYSICS_X), getValue(vector1, PHYSICS_Y) - getValue(vector2, PHYSICS_Y));
 		return result;
 	}
 	// end functions
 
 	// other
-	GUI_ON("ready", function() {
+	DRAW_ON("RenderReady", function() {
 		edge = getf32List(2);
 		axis = getf32List(2);
 		verticeList1 = getf32List(8);
 		verticeList2 = getf32List(8);
 		axes1 = getf32List(8);
 		axes2 = getf32List(8);
-		MTV = getf32List(3);
+		MTV = new Int32Array(3);
+		entity1 = getf32List(PHYSICS_ENTRIES);
+		entity2 = getf32List(PHYSICS_ENTRIES);
 		for (var i = 0; i < 16; i++) {
 			vectors.push(getf32List(2));
 		}
-		for (var i = 0; i < 16; i++) {
+		for (var e = 0; e < 16; e++) {
 			projections.push(getf32List(2));
 		}
 	});
