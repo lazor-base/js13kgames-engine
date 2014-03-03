@@ -1,66 +1,78 @@
-var Game = Module(function(event) {
+var Game = Module(function() {
+	"use strict";
 	// name: Game
 	// targets: Client
 	// filenames: Game
 	// variables
-	var hollow, solid;
 	// end variables
 	// functions
 
 	function start() {
-		var lastX = 0
+		var lastX = 0;
 		var lastY = 0;
 		var deltaX = 0;
 		var deltaY = 0;
 		var clickXLocation = 0;
 		var clickYLocation = 0;
 		var click = 0;
-		CONTROL_ON("change", function(localId, action, value, player) {
+		CONTROL_ON("change", function(localId, action, value) {
 			if (action === SCROLL_Y) {
-				var change = MAP_MOVE(null, value, null);
+				var change = CHUNK_MOVE(null, value, null);
 				if (change) {
-					Map.divideScreen();
+					CHUNK_DIVIDE_SCREEN();
 				}
 			}
 			if (action === MOUSE_X) {
 				deltaX = value - lastX;
 				lastX = value;
 				if (click === 1) {
-					MAP_MOVE(deltaX, null, null);
+					CHUNK_MOVE(deltaX, null, null);
 				}
-			}
-			if (action === MOUSE_LEFT) {
-				click = value;
-				clickXLocation = lastX;
-				clickYLocation = lastY;
-				if (value === 0) {
-					Map.divideScreen();
-				}
+				CHUNK_MAP_MOUSE("X", value);
 			}
 			if (action === MOUSE_Y) {
 				deltaY = value - lastY;
 				lastY = value;
 				if (click === 1) {
-					MAP_MOVE(null, null, deltaY);
+					CHUNK_MOVE(null, null, deltaY);
+				}
+				CHUNK_MAP_MOUSE("Y", value);
+			}
+			if (action === MOUSE_LEFT) {
+				clickXLocation = lastX;
+				clickYLocation = lastY;
+				if (value === 1) {
+					var result = STRUCTURES_PLACE();
+					if (result === false) {
+						click = value;
+					}
+				}
+				if (value === 0) {
+					click = value;
+					// CONTROL_TRUE_MOUSE_DATA(false, MOUSE_X, MOUSE_Y);
+					CHUNK_DIVIDE_SCREEN();
 				}
 			}
 		});
-		Map.divideScreen(true);
+		CONTROL_TRUE_MOUSE_DATA(true, MOUSE_X, MOUSE_Y);
+		CHUNK_DIVIDE_SCREEN(true);
 		GUI_ON("resize", function() {
-			Map.divideScreen();
+			CHUNK_DIVIDE_SCREEN();
 		});
-		LOOP_EVERY(0, function(deltaTime) {
+		LOOP_EVERY("frame", function() {
+			DRAW_RENDER();
 			// console.clear();
 		});
 		// setTimeout(function() {
-			// console.warn("STOPPING TIME")
-			// console.timelineEnd();
-			// console.profileEnd();
-			// LOOP_GO(false);
+		// console.warn("STOPPING TIME")
+		// console.timelineEnd();
+		// console.profileEnd();
+		// LOOP_GO(false);
 		// }, 1000);
-		LOOP_GO(true);
 		// console.timeline();
 		// console.profile();
+		LOOP_GO(true);
+		STRUCTURES_GUI();
 		// var worker = new Worker('WebWorker.js');
 
 		// worker.addEventListener('message', function(e) {
@@ -80,6 +92,8 @@ var Game = Module(function(event) {
 		CONTROL_LISTEN(document, MOUSE);
 		BLOCK_MAKE(0, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 		BLOCK_MAKE(1, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+		STRUCTURES_DEFINE(0, "Small Structure", "", BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, 0x000000, 1);
+		STRUCTURES_DEFINE(1, "Large Structure", "", BLOCK_SIZE*2, BLOCK_SIZE*2, BLOCK_SIZE*2, 0x000000, 1);
 	}
 	// end functions
 	// other
@@ -92,3 +106,6 @@ var Game = Module(function(event) {
 		// end return
 	};
 });
+if (typeof module !== "undefined") {
+	module.exports = Game;
+}
