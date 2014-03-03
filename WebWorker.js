@@ -24,23 +24,47 @@ function round(number) {
 // 	return Math.floor(Math.random() * (max - min + 1) + min);
 // }
 
-function chunkBlockAlgorithm(x, y, z /*, lastXBlock, lastYBlock, lastZBlock */ ) {
+function chunkBlockAlgorithm(x, y, z, lastXBlock, lastYBlock /*,lastZBlock*/ ) {
 	"use strict";
 	var data = 0;
 	var noiseData = 0;
+	var plane = 0;
+	var depth = 0;
 	if (y === 15) {
 		data = 1;
 	} else if (y <= 5) { // sky level is 0-5
 		data = 0;
-	} else if (y > 8) { // underground level 14-9
-		noiseData = Noise.noise3D(x / 10, y / 10, z / 10);
+	} else if (y > 10) { // underground level 14-10
+		noiseData = Noise.noise3D(x / 10, y / 20, z / 10);
 		data = round(noiseData * 256);
-	} else if (y <= 8) { // ground level 8-6
-		noiseData = Noise.noise3D(x / 10, y / 5, z / 10);
-		data = round(noiseData * 256);
-	} else { // all other data
-		noiseData = Noise.noise3D(x / 10, y / 5, z / 10);
-		data = round(noiseData * 256);
+	} else if (y === 10) {
+		data = 1;
+	} else if (y === 9) { // ground level 9-6
+		plane = 11;
+		depth = 2;
+		noiseData = (Noise.noise3D(x / plane, y / depth, z / plane) * (256));
+		data = round(noiseData);
+	} else if (y === 8) { // ground level 9-6
+		if (lastYBlock) {
+			plane = 15;
+			depth = 2;
+			noiseData = (Noise.noise3D(x / plane, y / depth, z / plane) * (256));
+			data = round(noiseData);
+		}
+	} else if (y === 7) { // ground level 9-6
+		if (lastYBlock) {
+			plane = 12;
+			depth = 4;
+			noiseData = (Noise.noise3D(x / plane, y / depth, z / plane) * (256));
+			data = round(noiseData);
+		}
+	} else if (y === 6) { // ground level 9-6
+		if (lastYBlock) {
+			plane = 16;
+			depth = 6;
+			noiseData = (Noise.noise3D(x / plane, y / depth, z / plane) * (256));
+			data = round(noiseData);
+		}
 	}
 	return data;
 }

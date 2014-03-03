@@ -21,13 +21,16 @@ var Structures = Module(function() {
 		graphic.beginFill(style, 1);
 		graphic.drawRect(x, z, structureWidth, structureDepth);
 		graphic.endFill();
+		graphic.beginFill(0x000000, 1);
+		graphic.drawRect(x+5, z+5, structureWidth-10, structureDepth-10);
+		graphic.endFill();
 	}
 
-	function defineStructure(id, name, description, width, height, depth, color, health, textureFn) {
+	function defineStructure(id, symbol, name, description, width, height, depth, color, colorString, health, textureFn) {
 		if (uniqueStructures[id]) {
 			throw new Error("Structure ID already exists");
 		}
-		var structure = new Uint16Array(STRUCTURE_DEFINITION_ENTRIES);
+		var structure = new Uint32Array(STRUCTURE_DEFINITION_ENTRIES);
 		structure[STRUCTURE_ID] = id;
 		structure[STRUCTURE_WIDTH] = width;
 		structure[STRUCTURE_HEIGHT] = height;
@@ -35,6 +38,8 @@ var Structures = Module(function() {
 		structure[STRUCTURE_COLOR] = color;
 		structure[STRUCTURE_HEALTH] = health;
 		structure.name = name;
+		structure.symbol = symbol;
+		structure.colorString = colorString;
 		structure.description = description;
 		structure.drawFn = textureFn || defaultStructureDraw;
 		uniqueStructures[id] = structure;
@@ -46,7 +51,7 @@ var Structures = Module(function() {
 		} else if (Mode === PLACEMENT_MODE) {
 			var yIndex = CHUNK_HAS_SPACE(uniqueStructures[constructionId]);
 			if (yIndex !== -1) {
-				var structure = new Int16Array(STRUCTURE_ENTRIES);
+				var structure = new Int32Array(STRUCTURE_ENTRIES);
 				structure.set(uniqueStructures[constructionId]);
 				var positionWithinChunkX = CHUNK_POSITION_X % CHUNK_DIMENTION;
 				var positionWithinChunkZ = CHUNK_POSITION_Z % CHUNK_DIMENTION;
@@ -59,7 +64,6 @@ var Structures = Module(function() {
 				structure[STRUCTURE_X] = positionWithinChunkX;
 				structure[STRUCTURE_Y] = yIndex;
 				structure[STRUCTURE_Z] = positionWithinChunkZ;
-				structure.drawFn = uniqueStructures[constructionId].drawFn;
 				CHUNK_ADD_STRUCTURE(structure);
 				Mode = IDLE_MODE;
 				return true;

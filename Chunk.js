@@ -53,6 +53,17 @@ var Chunk = Module(function() {
 		drawStructures(chunk);
 	}
 
+	function getLowestBlock(chunk, x, z, optionalY) {
+		var initialY = optionalY || viewPortY;
+		for (var y = initialY; y < numberOfBlocksPerAxis; y++) {
+			var internalCoordinate = getCoordinate(x, y, z);
+			var blockId = chunk.Blocks[internalCoordinate];
+			if (blockId) {
+				return y;
+			}
+		}
+	}
+
 	function checkForSpace(structure) {
 		var positionWithinChunkX = chunkMouseX % CHUNK_DIMENTION;
 		var positionWithinChunkZ = chunkMouseY % CHUNK_DIMENTION;
@@ -66,28 +77,32 @@ var Chunk = Module(function() {
 		var chunkZ = Math.round((chunkMouseY - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
 		var structureDepthInBlocks = Math.round((structure[STRUCTURE_DEPTH] - BLOCK_SIZE / 2) / BLOCK_SIZE);
 		var structureWidthInBlocks = Math.round((structure[STRUCTURE_WIDTH] - BLOCK_SIZE / 2) / BLOCK_SIZE);
+		var structureHeightInBlocks = Math.round((structure[STRUCTURE_HEIGHT] - BLOCK_SIZE / 2) / BLOCK_SIZE);
 		var yIndex = 0;
 		var chunk = makeChunk(chunkX, chunkZ);
 		var heightMapCoordinate = getCoordinate(positionWithinChunkX, null, positionWithinChunkZ);
 		if (chunk.HeightMap[heightMapCoordinate] - 1 > viewPortY - 1) {
 			yIndex = chunk.HeightMap[heightMapCoordinate] - 1;
 		} else {
-			yIndex = viewPortY - 1;
+			yIndex = getLowestBlock(chunk, positionWithinChunkX, positionWithinChunkZ) - 1; // we want to place above that block, not in it!
 		}
 		console.log("Trying to place structure at:", chunkMouseX, yIndex, chunkMouseY);
 		var internalCoordinate = getCoordinate(positionWithinChunkX, yIndex, positionWithinChunkZ);
 		if (chunk.Blocks[internalCoordinate] === 0) {
 			for (var z = 0; z < structureDepthInBlocks; z++) {
 				for (var x = 0; x < structureWidthInBlocks; x++) {
-					internalCoordinate = getCoordinate(positionWithinChunkX + x, yIndex, positionWithinChunkZ + z);
-					if (chunk.Blocks[internalCoordinate] !== 0) {
-						console.warn("Cannot place structure at:", positionWithinChunkX + x, yIndex, positionWithinChunkZ + z, "Reason: block in the way");
-						return -1;
-					}
-					internalCoordinate = getCoordinate(positionWithinChunkX + x, yIndex - 1, positionWithinChunkZ + z);
-					if (chunk.Blocks[internalCoordinate] !== 0) {
-						console.warn("Cannot place structure at:", positionWithinChunkX + x, yIndex - 1, positionWithinChunkZ + z, "Reason: no block to build on");
-						return -1;
+					for (var y = 1; y > -structureHeightInBlocks; y--) {
+						internalCoordinate = getCoordinate(positionWithinChunkX + x, yIndex + y, positionWithinChunkZ + z);
+						if (y === 1) {
+							if (chunk.Blocks[internalCoordinate] === 0) {
+								console.warn("Cannot place structure at:", chunkMouseX + x, yIndex + y, chunkMouseY + z, "Reason: no block to build on");
+								return -1;
+							}
+						}
+						if (chunk.Blocks[internalCoordinate] > 0 && y < 1) {
+							console.warn("Cannot place structure at:", chunkMouseX + x, yIndex + y, chunkMouseY + z, "Reason: block in the way");
+							return -1;
+						}
 					}
 				}
 			}
@@ -362,9 +377,9 @@ var Chunk = Module(function() {
 			chunkChange = true;
 		}
 		if (differentWidth || differentHeight || differentY || chunkChange || force) {
-			// while (textHost.children.length) {
-			// 	textHost.removeChild(textHost.children[0]);
-			// }
+			while (textHost.children.length) {
+				textHost.removeChild(textHost.children[0]);
+			}
 			graphics.position.x = 0;
 			textHost.position.x = 0;
 			graphics.position.y = 0;
@@ -415,13 +430,8 @@ var Chunk = Module(function() {
 		// 	}
 		// }
 		if (viewPortY > heightMapData) {
-			for (var y = viewPortY; y < numberOfBlocksPerAxis; y++) {
-				var internalCoordinate = getCoordinate(x, y, z);
-				var blockId = chunk.Blocks[internalCoordinate];
-				if (blockId) {
-					 return drawBlock(heightMapData, chunk, x, y, z, xCoordinate, zCoordinate);
-				}
-			}
+			var y = getLowestBlock(chunk, x, z);
+			return drawBlock(heightMapData, chunk, x, y, z, xCoordinate, zCoordinate);
 		} else { // if we aren't looking underground, run this
 			return drawBlock(heightMapData, chunk, x, heightMapData, z, xCoordinate, zCoordinate);
 		}
@@ -461,7 +471,15 @@ var Chunk = Module(function() {
 				var structureZ = structure[STRUCTURE_Z];
 				var xCoordinate = (structureX * BLOCK_SIZE) + viewPortX - (chunkX * -512);
 				var zCoordinate = (structureZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -512);
-				chunk.Structures[i].drawFn(graphics, structure, xCoordinate, structureY, zCoordinate);
+				var structureDefinition = STRUCTURES_GET(chunk.Structures[i][STRUCTURE_ID]);
+				structureDefinition.drawFn(graphics, structure, xCoordinate, structureY, zCoordinate);
+				var text = new PIXI.Text(structureDefinition.symbol, {
+					font: ((structure[STRUCTURE_WIDTH] + structure[STRUCTURE_HEIGHT]) / 2) + "px Arial",
+					fill: structureDefinition.colorString
+				});
+				text.position.x = (structureX * BLOCK_SIZE) + viewPortX - (chunkX * -512) + (structure[STRUCTURE_WIDTH] / 5);
+				text.position.y = (structureZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -512) - (structure[STRUCTURE_HEIGHT] / 16);
+				textHost.addChild(text);
 			}
 		}
 	}
@@ -477,7 +495,7 @@ var Chunk = Module(function() {
 		});
 		text.position.x = 10;
 		text.position.y = 10;
-		textHost.addChild(text);
+		DRAW_STAGE.addChild(text);
 
 	});
 	worker.addEventListener('message', function(e) {
