@@ -44,7 +44,7 @@ var Command = Module(function(event) {
 
 	// end functions
 	// other
-	GUI_ON("ready", function() {
+	DRAW_ON("RenderReady", function() {
 		commandStructId = STRUCT_MAKE(5, "f32");
 		commandStruct = STRUCT_GET(commandStructId);
 

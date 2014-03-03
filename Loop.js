@@ -1,4 +1,5 @@
 var Loop = Module(function(event) {
+	"use strict";
 	// name: Loop
 	// target: Client
 	// filenames: Engine
@@ -7,8 +8,6 @@ var Loop = Module(function(event) {
 	var stop = true;
 	var currentTick = 0;
 	var lastTick = 0;
-	var intervals = [];
-	var intervalTicks = [];
 	var loop;
 	var timeEstimates = [];
 	var queuedFunctions = [];
@@ -26,8 +25,8 @@ var Loop = Module(function(event) {
 	}
 
 	function nextFrame(callback) {
-		if (typeof requestAnimationFrame === "function") {
-			return requestAnimationFrame(callback);
+		if (typeof window.requestAnimationFrame === "function") {
+			return window.requestAnimationFrame(callback);
 		} else {
 			return setTimeout(callback, 1000 / 60);
 		}
@@ -44,29 +43,14 @@ var Loop = Module(function(event) {
 		if (stop === false) {
 			lastTick = currentTick;
 			currentTick = TIME_MICRO();
-			EMIT_EVENT("nextFrame", currentTick - lastTick);
-			for (var i = 0; i < intervals.length; i++) {
+			event.emit("nextFrame", currentTick - lastTick);
 				if (stop) {
 					return true;
 				}
-				var interval = parseInt(intervals[i], 10);
-				if (currentTick - intervalTicks[i] >= interval) {
-					var deltaTime = currentTick - intervalTicks[i];
-					intervalTicks[i] = currentTick;
-					EMIT_EVENT(intervals[i], deltaTime);
-				}
-			}
+				event.emit("frame", currentTick - lastTick);
+
 			loop = nextFrame(run);
 		}
-	}
-
-	function every(interval, callback) {
-		var intervalString = "" + interval;
-		if (intervals.indexOf(intervalString) === -1) {
-			intervals.push(intervalString);
-			intervalTicks.push(TIME_MICRO());
-		}
-		event.on(intervalString, callback);
 	}
 	// end functions
 
@@ -78,6 +62,7 @@ var Loop = Module(function(event) {
 			if (timeEstimates[timeEstimates.length - 1] + timeOccupied < 10) {
 				queueLength--;
 				var params = queuedParameters.pop();
+				params.push(timeDelta);
 				var fn = queuedFunctions.pop();
 				timeOccupied += timeEstimates.pop();
 				fn.apply(null, params);
@@ -92,8 +77,7 @@ var Loop = Module(function(event) {
 		// return
 		go: go,
 		queue: queue,
-		every: every,
-		on: event.on,
+		every: event.on,
 		// end return
 	};
 });
