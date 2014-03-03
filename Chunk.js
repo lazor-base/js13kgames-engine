@@ -37,6 +37,14 @@ var Chunk = Module(function() {
 
 	// functions
 
+	function getCoordinate(x, y, z) {
+		if (y === null) {
+			return (z * numberOfBlocksPerAxis) + x;
+		} else {
+			return (y * numberOfBlocksPerAxis + z) * numberOfBlocksPerAxis + x || 0;
+		}
+	}
+
 	function addStructure(structure) {
 		var chunkX = Math.round((chunkMouseX - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
 		var chunkZ = Math.round((chunkMouseY - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
@@ -60,23 +68,23 @@ var Chunk = Module(function() {
 		var structureWidthInBlocks = Math.round((structure[STRUCTURE_WIDTH] - BLOCK_SIZE / 2) / BLOCK_SIZE);
 		var yIndex = 0;
 		var chunk = makeChunk(chunkX, chunkZ);
-		var heightMapCoordinate = (positionWithinChunkZ * numberOfBlocksPerAxis) + positionWithinChunkX;
+		var heightMapCoordinate = getCoordinate(positionWithinChunkX, null, positionWithinChunkZ);
 		if (chunk.HeightMap[heightMapCoordinate] - 1 > viewPortY - 1) {
 			yIndex = chunk.HeightMap[heightMapCoordinate] - 1;
 		} else {
 			yIndex = viewPortY - 1;
 		}
 		console.log("Trying to place structure at:", chunkMouseX, yIndex, chunkMouseY);
-		var internalCoordinate = ((yIndex * numberOfBlocksPerAxis + positionWithinChunkZ) * numberOfBlocksPerAxis + positionWithinChunkX);
+		var internalCoordinate = getCoordinate(positionWithinChunkX, yIndex, positionWithinChunkZ);
 		if (chunk.Blocks[internalCoordinate] === 0) {
 			for (var z = 0; z < structureDepthInBlocks; z++) {
 				for (var x = 0; x < structureWidthInBlocks; x++) {
-					internalCoordinate = ((yIndex * numberOfBlocksPerAxis + (positionWithinChunkZ + z)) * numberOfBlocksPerAxis + (positionWithinChunkX + x));
+					internalCoordinate = getCoordinate(positionWithinChunkX + x, yIndex, positionWithinChunkZ + z);
 					if (chunk.Blocks[internalCoordinate] !== 0) {
 						console.warn("Cannot place structure at:", positionWithinChunkX + x, yIndex, positionWithinChunkZ + z, "Reason: block in the way");
 						return -1;
 					}
-					internalCoordinate = (((yIndex - 1) * numberOfBlocksPerAxis + (positionWithinChunkZ + z)) * numberOfBlocksPerAxis + (positionWithinChunkX + x));
+					internalCoordinate = getCoordinate(positionWithinChunkX + x, yIndex - 1, positionWithinChunkZ + z);
 					if (chunk.Blocks[internalCoordinate] !== 0) {
 						console.warn("Cannot place structure at:", positionWithinChunkX + x, yIndex - 1, positionWithinChunkZ + z, "Reason: no block to build on");
 						return -1;
@@ -384,7 +392,7 @@ var Chunk = Module(function() {
 	}
 
 	function drawBlock(heightMapData, chunk, x, y, z, xCoordinate, zCoordinate) {
-		var internalCoordinate = ((y * numberOfBlocksPerAxis + z) * numberOfBlocksPerAxis + x);
+		var internalCoordinate = getCoordinate(x, y, z);
 		var blockId = chunk.Blocks[internalCoordinate];
 		if (blockId) {
 			var blockData = chunk.BlockData[internalCoordinate] || 0;
@@ -397,12 +405,22 @@ var Chunk = Module(function() {
 	}
 
 	function drawPartialChunk(chunk, x, z, chunkX, chunkZ) {
-		var heightMapData = chunk.HeightMap[(z * numberOfBlocksPerAxis) + x];
+		var heightMapCoordinate = getCoordinate(x, null, z);
+		var heightMapData = chunk.HeightMap[heightMapCoordinate];
 		var xCoordinate = (x * BLOCK_SIZE) + viewPortX - (chunkX * -512);
 		var zCoordinate = (z * BLOCK_SIZE) + viewPortZ - (chunkZ * -512);
+		// if (viewPortY === 14) {
+		// 	if (heightMapData > 13) {
+		// 		console.log(heightMapData);
+		// 	}
+		// }
 		if (viewPortY > heightMapData) {
 			for (var y = viewPortY; y < numberOfBlocksPerAxis; y++) {
-				return drawBlock(heightMapData, chunk, x, y, z, xCoordinate, zCoordinate);
+				var internalCoordinate = getCoordinate(x, y, z);
+				var blockId = chunk.Blocks[internalCoordinate];
+				if (blockId) {
+					 return drawBlock(heightMapData, chunk, x, y, z, xCoordinate, zCoordinate);
+				}
 			}
 		} else { // if we aren't looking underground, run this
 			return drawBlock(heightMapData, chunk, x, heightMapData, z, xCoordinate, zCoordinate);
