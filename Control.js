@@ -1,4 +1,5 @@
 var Control = (function(navigator) {
+	"use strict";
 	// name: Control
 	// targets: Client
 	// filenames: Engine
@@ -17,6 +18,10 @@ var Control = (function(navigator) {
 		var i = 0;
 		var mousex = 0;
 		var mousey = 0;
+		var movewait;
+		var realMouseMoveData = false;
+		var mouseMOveXId = 0;
+		var mouseMOveYId = 0;
 		// end variables
 
 		// functions
@@ -32,11 +37,19 @@ var Control = (function(navigator) {
 
 
 		function pressEvent(e) {
-			changeKey(eventType(e.type), 0, e.which, ACTIVE, e);
+			if (e.touches) {
+				changeKey(MOUSE, 0, MOUSE_LEFT_CLICK, ACTIVE, e);
+			} else {
+				changeKey(eventType(e.type), 0, e.which, ACTIVE, e);
+			}
 		}
 
 		function releaseEvent(e) {
-			changeKey(eventType(e.type), 0, e.which, INACTIVE, e);
+			if (e.touches) {
+				changeKey(MOUSE, 0, MOUSE_LEFT_CLICK, INACTIVE, e);
+			} else {
+				changeKey(eventType(e.type), 0, e.which, INACTIVE, e);
+			}
 		}
 
 		function scrollEvent(e) {
@@ -44,41 +57,36 @@ var Control = (function(navigator) {
 			changeKey(eventType(e.type), 0, MOUSE_WHEEL_Y, e.wheelDeltaY, e);
 		}
 
-		function moveEvent(e) {
-			if (e.pageX || e.pageY) {
+		function handleMouseMove(e) {
+			if (e.touches) {
+				var touch = e.touches[0];
+				if (touch.pageX || touch.pageY) {
+					mousex = touch.pageX;
+					mousey = touch.pageY;
+				} else if (touch.clientX || touch.clientY) {
+					mousex = touch.clientX;
+					mousey = touch.clientY;
+				}
+			} else if (e.pageX || e.pageY) {
 				mousex = e.pageX;
 				mousey = e.pageY;
 			} else if (e.clientX || e.clientY) {
 				mousex = e.clientX;
 				mousey = e.clientY;
 			}
-			// changeKey(eventType(e.type), 0, MOUSE_MOVE_X, mousex, e);
-			// changeKey(eventType(e.type), 0, MOUSE_MOVE_Y, mousey, e);
 		}
 
-		function touchMoveEvent(e) {
-			if (e.touches[0].pageX || e.touches[0].pageY) {
-				mousex = e.touches[0].pageX;
-				mousey = e.touches[0].pageY;
-			} else if (e.touches[0].clientX || e.touches[0].clientY) {
-				mousex = e.touches[0].clientX;
-				mousey = e.touches[0].clientY;
-			}
-			// changeKey(eventType("mouse"), 0, MOUSE_MOVE_X, mousex, e);
-			// changeKey(eventType("mouse"), 0, MOUSE_MOVE_Y, mousey, e);
-		}
-
-		function mouseChangeEvent(type, id, keyCode, value, e) {
-			if (e && e.preventDefault) {
-				e.preventDefault();
-			}
-			PLAYER_FIND(type, id, function(player) {
-				// console.log(player.get(PLAYER_LENGTH + action), value, player.get(PLAYER_LENGTH + action) !== value)
-				if (player.get(PLAYER_LENGTH + action) !== value) { // we only want to submit a change if the value is different
-					player.set(PLAYER_LENGTH + action, value);
-					sendEvent(player.get(LOCALID), action, value, player);
+		function moveEvent(e) {
+			handleMouseMove(e);
+			if (!realMouseMoveData) {
+				if (typeof movewait !== 'undefined') {
+					clearTimeout(movewait);
 				}
-			});
+				movewait = setTimeout(function() {
+					changeKey(eventType(e.type), 0, MOUSE_MOVE_X, mousex, e);
+					changeKey(eventType(e.type), 0, MOUSE_MOVE_Y, mousey, e);
+				}, 50);
+			}
 		}
 
 		function startPolling() {
@@ -88,9 +96,9 @@ var Control = (function(navigator) {
 			}
 		}
 
-		function stopPolling() {
-			polling = false;
-		}
+		// function stopPolling() {
+		// 	polling = false;
+		// }
 
 		function poll() {
 			if (polling) {
@@ -241,29 +249,15 @@ var Control = (function(navigator) {
 			EMIT_EVENT("change", localId, action, value, player);
 		}
 
-		function touchStart(e) {
-			var touches = e.changedTouches;
-			changeKey(MOUSE, 0, MOUSE_LEFT_CLICK, ACTIVE, e);
-		}
-
-		function touchEnd(e) {
-			var touches = e.changedTouches;
-			changeKey(MOUSE, 0, MOUSE_LEFT_CLICK, INACTIVE, e);
-		}
-
 		function listen(node, type) {
 			if (type === MOUSE) {
 				node[addEventListener]("mousedown", pressEvent);
 				node[addEventListener]("mouseup", releaseEvent);
 				node[addEventListener]("mousemove", moveEvent);
 				node[addEventListener]("mousewheel", scrollEvent);
-				node[addEventListener]("touchstart", touchStart);
-				node[addEventListener]("touchend", touchEnd);
-				node[addEventListener]("touchmove", touchMoveEvent);
-				LOOP_EVERY(0, function() {
-					changeKey(MOUSE, 0, MOUSE_MOVE_X, mousex);
-					changeKey(MOUSE, 0, MOUSE_MOVE_Y, mousey);
-				})
+				node[addEventListener]("touchstart", pressEvent);
+				node[addEventListener]("touchend", releaseEvent);
+				node[addEventListener]("touchmove", moveEvent);
 			}
 			if (type === KEYBOARD) {
 				node[addEventListener]("keydown", pressEvent);
@@ -274,17 +268,31 @@ var Control = (function(navigator) {
 
 		// other
 		event.on("gamepadChange", testGamepad);
+		LOOP_EVERY("frame", function() {
+			if (realMouseMoveData) {
+				sendEvent(0, mouseMOveXId, mousex);
+				sendEvent(0, mouseMOveYId, mousey);
+			}
+		});
 		// end other
 
 		return {
 			// return
 			get gamepads() {
-				return gamepads
+				return gamepads;
 			},
 			on: event.on,
-			emit: event.emit,
 			listen: listen,
-			init: initControl
+			init: initControl,
+			mouseMove: function(value, x, y) {
+				mouseMOveXId = x;
+				mouseMOveYId = y;
+				if (value) {
+					realMouseMoveData = true;
+				} else {
+					realMouseMoveData = false;
+				}
+			}
 			// end return
 		};
 	});
