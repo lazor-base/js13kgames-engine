@@ -22,7 +22,7 @@ var Structures = Module(function() {
 		graphic.drawRect(x, z, structureWidth, structureDepth);
 		graphic.endFill();
 		graphic.beginFill(0x000000, 1);
-		graphic.drawRect(x+5, z+5, structureWidth-10, structureDepth-10);
+		graphic.drawRect(x + 5, z + 5, structureWidth - 10, structureDepth - 10);
 		graphic.endFill();
 	}
 
@@ -75,6 +75,7 @@ var Structures = Module(function() {
 	function eventListener(e) {
 		constructionId = parseInt(e.target.getAttribute("data-id"), 10);
 		Mode = PLACEMENT_MODE;
+		CHUNK_PLACE(uniqueStructures[constructionId]);
 	}
 
 	function makeStructuresGUI() {

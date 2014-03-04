@@ -14,7 +14,8 @@ var Chunk = Module(function() {
 	// var numberOfYChunks = chunkHeight / numberOfBlocksPerAxis;
 	var numberOfBlocksPerChunk = numberOfBlocksPerAxis * numberOfBlocksPerAxis * numberOfBlocksPerAxis;
 	var numberOfBlocksPerYAxis = numberOfBlocksPerAxis * numberOfBlocksPerAxis;
-	// var graphics = new PIXI.Graphics();
+	var tempBuilding = new PIXI.Graphics();
+	var structureDetails = null;
 	// var textHost = new PIXI.DisplayObjectContainer();
 	var layeredGraphics = [];
 	var layeredText = [];
@@ -39,6 +40,7 @@ var Chunk = Module(function() {
 	var text;
 	var chunkMouseX = 0;
 	var chunkMouseY = 0;
+	var buildMode = IDLE_MODE;
 	// end variables
 
 	// functions
@@ -237,6 +239,24 @@ var Chunk = Module(function() {
 		if (text) {
 			text.setText(chunkMouseX + "," + viewPortY + "," + chunkMouseY);
 		}
+		if (buildMode === PLACEMENT_MODE) {
+			tempBuilding.clear();
+			var chunkX = Math.round((chunkMouseX - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
+			var chunkZ = Math.round((chunkMouseY - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
+			var xCoordinate = ((chunkMouseX % 16) * BLOCK_SIZE) + viewPortX - (chunkX * -512);
+			var zCoordinate = ((chunkMouseY % 16) * BLOCK_SIZE) + viewPortZ - (chunkZ * -512);
+			var structureWidth = structureDetails[STRUCTURE_WIDTH];
+			var structureDepth = structureDetails[STRUCTURE_DEPTH];
+			tempBuilding.width = structureWidth;
+			tempBuilding.height = structureDepth;
+			var style = structureDetails[STRUCTURE_COLOR];
+			tempBuilding.beginFill(style, 1);
+			tempBuilding.drawRect(xCoordinate, zCoordinate, structureWidth, structureDepth);
+			tempBuilding.endFill();
+			tempBuilding.beginFill(0x000000, 1);
+			tempBuilding.drawRect(xCoordinate + 5, zCoordinate + 5, structureWidth - 10, structureDepth - 10);
+			tempBuilding.endFill();
+		}
 	}
 
 	function moveViewPort(x, y, z) {
@@ -267,7 +287,7 @@ var Chunk = Module(function() {
 			}
 			var result = false;
 			for (var f = 0; f < 16; f++) {
-				if (f < viewPortY-1) {
+				if (f < viewPortY - 1) {
 					result = false;
 				} else {
 					result = true;
@@ -517,6 +537,11 @@ var Chunk = Module(function() {
 			// }
 		}
 	}
+
+	function initPlacementMode(structure) {
+		buildMode = PLACEMENT_MODE;
+		structureDetails = structure;
+	}
 	// end functions
 
 	// other
@@ -533,8 +558,8 @@ var Chunk = Module(function() {
 			DRAW_STAGE.addChild(layeredGraphics[i]);
 			DRAW_STAGE.addChild(layeredText[i]);
 		}
+		DRAW_STAGE.addChild(tempBuilding);
 		DRAW_STAGE.addChild(text);
-
 	});
 	worker.addEventListener('message', function(e) {
 		if (e.data[OPERATION] === DEBUG) {
@@ -578,6 +603,7 @@ var Chunk = Module(function() {
 		divideScreen: divideScreen,
 		addStruct: addStructure,
 		check: checkForSpace,
+		place: initPlacementMode,
 		mapMouse: mapMouse
 		//end return
 	};
