@@ -14,8 +14,14 @@ var Chunk = Module(function() {
 	// var numberOfYChunks = chunkHeight / numberOfBlocksPerAxis;
 	var numberOfBlocksPerChunk = numberOfBlocksPerAxis * numberOfBlocksPerAxis * numberOfBlocksPerAxis;
 	var numberOfBlocksPerYAxis = numberOfBlocksPerAxis * numberOfBlocksPerAxis;
-	var graphics = new PIXI.Graphics();
-	var textHost = new PIXI.DisplayObjectContainer();
+	// var graphics = new PIXI.Graphics();
+	// var textHost = new PIXI.DisplayObjectContainer();
+	var layeredGraphics = [];
+	var layeredText = [];
+	for (var i = 0; i < 16; i++) {
+		layeredGraphics.push(new PIXI.Graphics());
+		layeredText.push(new PIXI.DisplayObjectContainer());
+	}
 	var worker = new Worker('WebWorker.js');
 	var onScreen = [];
 	var blockCache = {};
@@ -240,8 +246,12 @@ var Chunk = Module(function() {
 		if (x !== null) {
 			viewPortX += x;
 			mapOffsetX += x;
-			graphics.position.x = mapOffsetX;
-			textHost.position.x = mapOffsetX;
+			// graphics.position.x = mapOffsetX;
+			// textHost.position.x = mapOffsetX;
+			for (var i = 0; i < 16; i++) {
+				layeredGraphics[i].position.x = mapOffsetX;
+				layeredText[i].position.x = mapOffsetX;
+			}
 		}
 		if (y !== null) {
 			if (y < 0) {
@@ -255,12 +265,26 @@ var Chunk = Module(function() {
 			if (viewPortY < 0) {
 				viewPortY = 0;
 			}
+			var result = false;
+			for (var f = 0; f < 16; f++) {
+				if (f < viewPortY-1) {
+					result = false;
+				} else {
+					result = true;
+				}
+				layeredGraphics[f].visible = result;
+				layeredText[f].visible = result;
+			}
 		}
 		if (z !== null) {
 			viewPortZ += z;
 			mapOffsetY += z;
-			graphics.position.y = mapOffsetY;
-			textHost.position.y = mapOffsetY;
+			// graphics.position.y = mapOffsetY;
+			// textHost.position.y = mapOffsetY;
+			for (var e = 0; e < 16; e++) {
+				layeredGraphics[e].position.y = mapOffsetY;
+				layeredText[e].position.y = mapOffsetY;
+			}
 		}
 		if (oldViewPortX !== viewPortX || oldViewPortY !== viewPortY || oldViewPortZ !== viewPortZ) {
 			return true;
@@ -377,16 +401,26 @@ var Chunk = Module(function() {
 			chunkChange = true;
 		}
 		if (differentWidth || differentHeight || differentY || chunkChange || force) {
-			while (textHost.children.length) {
-				textHost.removeChild(textHost.children[0]);
+			// while (textHost.children.length) {
+			// 	textHost.removeChild(textHost.children[0]);
+			// }
+			// graphics.clear();
+			for (var f = 0; f < 16; f++) {
+				while (layeredText[f].children.length) {
+					layeredText[f].removeChild(layeredText[f].children[0]);
+				}
+				layeredGraphics[f].clear();
+				layeredText[f].position.x = 0;
+				layeredText[f].position.y = 0;
+				layeredGraphics[f].position.x = 0;
+				layeredGraphics[f].position.y = 0;
 			}
-			graphics.position.x = 0;
-			textHost.position.x = 0;
-			graphics.position.y = 0;
-			textHost.position.y = 0;
+			// graphics.position.x = 0;
+			// textHost.position.x = 0;
+			// graphics.position.y = 0;
+			// textHost.position.y = 0;
 			mapOffsetX = 0;
 			mapOffsetY = 0;
-			graphics.clear();
 			for (var r = -1; r < verticalChunks + 1; r++) {
 				for (var t = -1; t < horizontalChunks + 1; t++) {
 					var X = Xcoordinate + t;
@@ -415,7 +449,7 @@ var Chunk = Module(function() {
 				blockCache[blockId] = BLOCK_GET(blockId);
 			}
 			var block = blockCache[blockId];
-			block.drawFn(graphics, block, xCoordinate, y, zCoordinate, heightMapData, blockData);
+			block.drawFn(layeredGraphics[y], block, xCoordinate, y, zCoordinate, heightMapData, blockData);
 		}
 	}
 
@@ -465,36 +499,40 @@ var Chunk = Module(function() {
 		for (var i = 0; i < chunk.Structures.length; i++) {
 			var structure = chunk.Structures[i];
 			var structureY = structure[STRUCTURE_Y];
-			var structure2Base = structureY + (structure[STRUCTURE_HEIGHT] / BLOCK_SIZE);
-			if (structure2Base > viewPortY) {
-				var structureX = structure[STRUCTURE_X];
-				var structureZ = structure[STRUCTURE_Z];
-				var xCoordinate = (structureX * BLOCK_SIZE) + viewPortX - (chunkX * -512);
-				var zCoordinate = (structureZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -512);
-				var structureDefinition = STRUCTURES_GET(chunk.Structures[i][STRUCTURE_ID]);
-				structureDefinition.drawFn(graphics, structure, xCoordinate, structureY, zCoordinate);
-				var text = new PIXI.Text(structureDefinition.symbol, {
-					font: ((structure[STRUCTURE_WIDTH] + structure[STRUCTURE_HEIGHT]) / 2) + "px Arial",
-					fill: structureDefinition.colorString
-				});
-				text.position.x = (structureX * BLOCK_SIZE) + viewPortX - (chunkX * -512) + (structure[STRUCTURE_WIDTH] / 5);
-				text.position.y = (structureZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -512) - (structure[STRUCTURE_HEIGHT] / 16);
-				textHost.addChild(text);
-			}
+			// var structureBase = structureY + (structure[STRUCTURE_HEIGHT] / BLOCK_SIZE);
+			// if (structureBase > viewPortY) {
+			var structureX = structure[STRUCTURE_X];
+			var structureZ = structure[STRUCTURE_Z];
+			var xCoordinate = (structureX * BLOCK_SIZE) + viewPortX - (chunkX * -512);
+			var zCoordinate = (structureZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -512);
+			var structureDefinition = STRUCTURES_GET(chunk.Structures[i][STRUCTURE_ID]);
+			structureDefinition.drawFn(layeredGraphics[structureY], structure, xCoordinate, structureY, zCoordinate);
+			var text = new PIXI.Text(structureDefinition.symbol, {
+				font: ((structure[STRUCTURE_WIDTH] + structure[STRUCTURE_HEIGHT]) / 2) + "px Arial",
+				fill: structureDefinition.colorString
+			});
+			text.position.x = (structureX * BLOCK_SIZE) + viewPortX - (chunkX * -512) + (structure[STRUCTURE_WIDTH] / 5);
+			text.position.y = (structureZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -512) - (structure[STRUCTURE_HEIGHT] / 16);
+			layeredText[structureY].addChild(text);
+			// }
 		}
 	}
 	// end functions
 
 	// other
 	GUI_ON("RenderReady", function() {
-		DRAW_STAGE.addChild(graphics);
-		DRAW_STAGE.addChild(textHost);
+		// DRAW_STAGE.addChild(graphics);
+		// DRAW_STAGE.addChild(textHost);
 		text = new PIXI.Text(0 + "," + 0, {
 			font: "50px Arial",
 			fill: "red"
 		});
 		text.position.x = 10;
 		text.position.y = 10;
+		for (var i = 15; i > -1; i--) {
+			DRAW_STAGE.addChild(layeredGraphics[i]);
+			DRAW_STAGE.addChild(layeredText[i]);
+		}
 		DRAW_STAGE.addChild(text);
 
 	});
