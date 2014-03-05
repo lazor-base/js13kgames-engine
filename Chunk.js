@@ -40,6 +40,8 @@ var Chunk = Module(function() {
 	var text;
 	var chunkMouseX = 0;
 	var chunkMouseY = 0;
+	var oldChunkMouseX = 0;
+	var oldChunkMouseY = 0;
 	var buildMode = IDLE_MODE;
 	// end variables
 
@@ -59,6 +61,8 @@ var Chunk = Module(function() {
 		var chunk = makeChunk(chunkX, chunkZ);
 		chunk.Structures.push(structure);
 		drawStructures(chunk);
+		buildMode = IDLE_MODE;
+		tempBuilding.clear();
 	}
 
 	function getLowestBlock(chunk, x, z, optionalY) {
@@ -73,6 +77,7 @@ var Chunk = Module(function() {
 	}
 
 	function checkForSpace(structure) {
+		var possibleChunkCollisions = [];
 		var positionWithinChunkX = chunkMouseX % CHUNK_DIMENTION;
 		var positionWithinChunkZ = chunkMouseY % CHUNK_DIMENTION;
 		if (positionWithinChunkX < 0) {
@@ -88,38 +93,80 @@ var Chunk = Module(function() {
 		var structureHeightInBlocks = Math.round((structure[STRUCTURE_HEIGHT] - BLOCK_SIZE / 2) / BLOCK_SIZE);
 		var yIndex = 0;
 		var chunk = makeChunk(chunkX, chunkZ);
+		possibleChunkCollisions.push(chunk);
 		var heightMapCoordinate = getCoordinate(positionWithinChunkX, null, positionWithinChunkZ);
 		if (chunk.HeightMap[heightMapCoordinate] - 1 > viewPortY - 1) {
 			yIndex = chunk.HeightMap[heightMapCoordinate] - 1;
 		} else {
 			yIndex = getLowestBlock(chunk, positionWithinChunkX, positionWithinChunkZ) - 1; // we want to place above that block, not in it!
 		}
-		console.log("Trying to place structure at:", chunkMouseX, yIndex, chunkMouseY);
+		// console.log("Trying to place structure at:", chunkMouseX, yIndex, chunkMouseY);
 		var internalCoordinate = getCoordinate(positionWithinChunkX, yIndex, positionWithinChunkZ);
 		if (chunk.Blocks[internalCoordinate] === 0) {
 			for (var z = 0; z < structureDepthInBlocks; z++) {
 				for (var x = 0; x < structureWidthInBlocks; x++) {
 					for (var y = 1; y > -structureHeightInBlocks; y--) {
-						internalCoordinate = getCoordinate(positionWithinChunkX + x, yIndex + y, positionWithinChunkZ + z);
+						var newChunkX = Math.round(((chunkMouseX + x) - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
+						var newChunkZ = Math.round(((chunkMouseY + z) - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
+						var newChunk = makeChunk(newChunkX, newChunkZ);
+						if (possibleChunkCollisions.indexOf(newChunk) === -1) {
+							possibleChunkCollisions.push(newChunk);
+						}
+						var newPositionWithinChunkX = (chunkMouseX + x) % CHUNK_DIMENTION;
+						var newPositionWithinChunkZ = (chunkMouseY + z) % CHUNK_DIMENTION;
+						if (newPositionWithinChunkX < 0) {
+							newPositionWithinChunkX += CHUNK_DIMENTION;
+						}
+						if (newPositionWithinChunkZ < 0) {
+							newPositionWithinChunkZ += CHUNK_DIMENTION;
+						}
+						internalCoordinate = getCoordinate(newPositionWithinChunkX, yIndex + y, newPositionWithinChunkZ);
 						if (y === 1) {
-							if (chunk.Blocks[internalCoordinate] === 0) {
+							if (newChunk.Blocks[internalCoordinate] === 0) {
 								console.warn("Cannot place structure at:", chunkMouseX + x, yIndex + y, chunkMouseY + z, "Reason: no block to build on");
 								return -1;
 							}
 						}
-						if (chunk.Blocks[internalCoordinate] > 0 && y < 1) {
+						if (newChunk.Blocks[internalCoordinate] > 0 && y < 1) {
 							console.warn("Cannot place structure at:", chunkMouseX + x, yIndex + y, chunkMouseY + z, "Reason: block in the way");
 							return -1;
 						}
 					}
 				}
 			}
-			for (var i = 0; i < chunk.Structures.length; i++) {
-				var thisStructure = chunk.Structures[i];
-				var result = simpleTest(positionWithinChunkX, yIndex, positionWithinChunkZ, structure, thisStructure);
-				if (result) {
-					console.warn("Cannot place structure at:", positionWithinChunkX, yIndex, positionWithinChunkZ, "Reason: structure in the way");
-					return -1;
+			if (positionWithinChunkX - 1 === -1) {
+				chunk = makeChunk(chunkX - 1, chunkZ);
+				if (possibleChunkCollisions.indexOf(chunk) === -1) {
+					possibleChunkCollisions.push(chunk);
+				}
+			}
+			if (positionWithinChunkZ - 1 === -1) {
+				chunk = makeChunk(chunkX, chunkZ - 1);
+				if (possibleChunkCollisions.indexOf(chunk) === -1) {
+					possibleChunkCollisions.push(chunk);
+				}
+			}
+			if (positionWithinChunkX - 1 === -1 && positionWithinChunkZ - 1 === -1) {
+				chunk = makeChunk(chunkX - 1, chunkZ - 1);
+				if (possibleChunkCollisions.indexOf(chunk) === -1) {
+					possibleChunkCollisions.push(chunk);
+				}
+			}
+			console.log(positionWithinChunkX, positionWithinChunkZ);
+			for (var r = 0; r < possibleChunkCollisions.length; r++) {
+				chunk = possibleChunkCollisions[r];
+				for (var i = 0; i < chunk.Structures.length; i++) {
+					var thisStructure = chunk.Structures[i];
+					var currentChunkX = chunk.Data[CHUNK_X];
+					var currentChunkZ = chunk.Data[CHUNK_Z];
+					var differenceX = chunkX + currentChunkX;
+					var differenceZ = chunkZ + currentChunkZ;
+					console.log(differenceX, differenceZ, positionWithinChunkX - differenceX, positionWithinChunkZ - differenceZ);
+					var result = simpleTest(currentChunkX, currentChunkZ, (positionWithinChunkX + differenceX) % CHUNK_DIMENTION, yIndex, (positionWithinChunkZ + differenceZ) % CHUNK_DIMENTION, structure, thisStructure);
+					if (result) {
+						console.warn("Cannot place structure at:", positionWithinChunkX, yIndex, positionWithinChunkZ, "Reason: structure in the way");
+						return -1;
+					}
 				}
 			}
 			return yIndex;
@@ -130,8 +177,8 @@ var Chunk = Module(function() {
 	}
 
 	function collision(AX1, AY1, AX2, AY2, BX1, BY1, BX2, BY2) {
-		if (AX1 < BX1) {
-			console.log(AX1, "AX1 < BX1", BX1);
+		if (AX1 <= BX1) {
+			console.log(AX1, "AX1 <= BX1", BX1);
 			if (AX2 <= BX1) {
 				console.log(AX2, "AX2 <= BX1", BX1);
 				return false;
@@ -159,8 +206,8 @@ var Chunk = Module(function() {
 			}
 		} else {
 			console.log(AX1, "AX1 > BX1", BX1);
-			if (AX1 >= BX2) {
-				console.log(AX1, "AX1 >= BX2", BX2);
+			if (AX1 > BX2) {
+				console.log(AX1, "AX1 > BX2", BX2);
 				return false;
 			} else {
 				console.log(AX1, "AX1 < BX2", BX2);
@@ -189,16 +236,18 @@ var Chunk = Module(function() {
 		return false; // should never get here
 	}
 
-	function simpleTest(x, y, z, structureDefinition, structure) {
-		var structure1Left = x * BLOCK_SIZE;
+	function simpleTest(chunkX, chunkZ, x, y, z, structureDefinition, structure) {
+		var chunkXSize = (chunkX * CHUNK_DIMENTION * BLOCK_SIZE);
+		var chunkZSize = (chunkZ * CHUNK_DIMENTION * BLOCK_SIZE);
+		var structure1Left = chunkXSize + (x * BLOCK_SIZE);
 		var structure1Right = structure1Left + structureDefinition[STRUCTURE_WIDTH];
-		var structure1Top = z * BLOCK_SIZE;
+		var structure1Top = chunkZSize + (z * BLOCK_SIZE);
 		var structure1Bottom = structure1Top + structureDefinition[STRUCTURE_DEPTH];
 		var structure1Surface = y * BLOCK_SIZE;
 		var structure1Base = structure1Surface - structureDefinition[STRUCTURE_HEIGHT];
-		var structure2Left = structure[STRUCTURE_X] * BLOCK_SIZE;
+		var structure2Left = chunkXSize + (structure[STRUCTURE_X] * BLOCK_SIZE);
 		var structure2Right = structure2Left + structure[STRUCTURE_WIDTH];
-		var structure2Top = structure[STRUCTURE_Z] * BLOCK_SIZE;
+		var structure2Top = chunkZSize + (structure[STRUCTURE_Z] * BLOCK_SIZE);
 		var structure2Bottom = structure2Top + structure[STRUCTURE_DEPTH];
 		var structure2Surface = structure[STRUCTURE_Y] * BLOCK_SIZE;
 		var structure2Base = structure2Surface - structure[STRUCTURE_HEIGHT];
@@ -230,6 +279,8 @@ var Chunk = Module(function() {
 	}
 
 	function mapMouse(type, value) {
+		oldChunkMouseX = chunkMouseX;
+		oldChunkMouseY = chunkMouseY;
 		if (type === "X") {
 			chunkMouseX = Math.round(((value - viewPortX) - BLOCK_SIZE / 2) / BLOCK_SIZE);
 
@@ -239,17 +290,32 @@ var Chunk = Module(function() {
 		if (text) {
 			text.setText(chunkMouseX + "," + viewPortY + "," + chunkMouseY);
 		}
-		if (buildMode === PLACEMENT_MODE) {
+		if (buildMode === PLACEMENT_MODE && (oldChunkMouseX !== chunkMouseX || oldChunkMouseY !== chunkMouseY)) {
 			tempBuilding.clear();
 			var chunkX = Math.round((chunkMouseX - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
 			var chunkZ = Math.round((chunkMouseY - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
-			var xCoordinate = ((chunkMouseX % 16) * BLOCK_SIZE) + viewPortX - (chunkX * -512);
-			var zCoordinate = ((chunkMouseY % 16) * BLOCK_SIZE) + viewPortZ - (chunkZ * -512);
+			var positionWithinChunkX = chunkMouseX % CHUNK_DIMENTION;
+			var positionWithinChunkZ = chunkMouseY % CHUNK_DIMENTION;
+			if (positionWithinChunkX < 0) {
+				positionWithinChunkX += CHUNK_DIMENTION;
+			}
+			if (positionWithinChunkZ < 0) {
+				positionWithinChunkZ += CHUNK_DIMENTION;
+			}
+			// var chunk = makeChunk(chunkX, chunkZ);
+			var xCoordinate = (positionWithinChunkX * BLOCK_SIZE) + viewPortX - (chunkX * -512);
+			var zCoordinate = (positionWithinChunkZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -512);
+			// var yCoordinate = getLowestBlock(chunk, xCoordinate, zCoordinate);
+			var space = checkForSpace(structureDetails);
+			// structureDetails.drawFn(tempBuilding, structureDetails, xCoordinate, getLowestBlock(chunk, xCoordinate, zCoordinate), zCoordinate);
 			var structureWidth = structureDetails[STRUCTURE_WIDTH];
 			var structureDepth = structureDetails[STRUCTURE_DEPTH];
 			tempBuilding.width = structureWidth;
 			tempBuilding.height = structureDepth;
-			var style = structureDetails[STRUCTURE_COLOR];
+			var style = 0x00FF00;
+			if (space === -1) {
+				style = 0xFF0000;
+			}
 			tempBuilding.beginFill(style, 1);
 			tempBuilding.drawRect(xCoordinate, zCoordinate, structureWidth, structureDepth);
 			tempBuilding.endFill();
@@ -450,7 +516,6 @@ var Chunk = Module(function() {
 				}
 			}
 		}
-		// console.log(onScreen)
 		oldViewPortX = viewPortX;
 		oldViewPortY = viewPortY;
 		oldViewPortZ = viewPortZ;
@@ -478,11 +543,6 @@ var Chunk = Module(function() {
 		var heightMapData = chunk.HeightMap[heightMapCoordinate];
 		var xCoordinate = (x * BLOCK_SIZE) + viewPortX - (chunkX * -512);
 		var zCoordinate = (z * BLOCK_SIZE) + viewPortZ - (chunkZ * -512);
-		// if (viewPortY === 14) {
-		// 	if (heightMapData > 13) {
-		// 		console.log(heightMapData);
-		// 	}
-		// }
 		if (viewPortY > heightMapData) {
 			var y = getLowestBlock(chunk, x, z);
 			return drawBlock(heightMapData, chunk, x, y, z, xCoordinate, zCoordinate);
@@ -559,6 +619,7 @@ var Chunk = Module(function() {
 			DRAW_STAGE.addChild(layeredText[i]);
 		}
 		DRAW_STAGE.addChild(tempBuilding);
+		tempBuilding.alpha = 0.25;
 		DRAW_STAGE.addChild(text);
 	});
 	worker.addEventListener('message', function(e) {
