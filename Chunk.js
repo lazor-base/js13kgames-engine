@@ -43,22 +43,48 @@ var Chunk = Module(function() {
 	var oldChunkMouseX = 0;
 	var oldChunkMouseY = 0;
 	var buildMode = IDLE_MODE;
+
 	// end variables
 
 	// functions
 
 	function getCoordinate(x, y, z) {
-		if (y === null) {
-			return (z * numberOfBlocksPerAxis) + x;
-		} else {
-			return (y * numberOfBlocksPerAxis + z) * numberOfBlocksPerAxis + x || 0;
+		var result = ((y || 0) * numberOfBlocksPerAxis + z) * numberOfBlocksPerAxis + x;
+		if (result < 0) {
+			throw new Error("Attempt to index block out of range, " + x + "," + y + "," + z);
 		}
+		return result;
 	}
 
-	function addStructure(structure) {
-		var chunkX = Math.round((chunkMouseX - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
-		var chunkZ = Math.round((chunkMouseY - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
+	function addStructure(positionX, positionY, positionZ, structure) {
+		var chunkX = resize(chunkMouseX, numberOfBlocksPerAxis);
+		var chunkZ = resize(chunkMouseY, numberOfBlocksPerAxis);
+		var structureDepthInBlocks = resize(structure[STRUCTURE_DEPTH], BLOCK_SIZE);
+		var structureWidthInBlocks = resize(structure[STRUCTURE_WIDTH], BLOCK_SIZE);
+		var structureHeightInBlocks = resize(structure[STRUCTURE_HEIGHT], BLOCK_SIZE);
 		var chunk = makeChunk(chunkX, chunkZ);
+		for (var z = 0; z < structureDepthInBlocks; z++) {
+			for (var x = 0; x < structureWidthInBlocks; x++) {
+				for (var y = 1; y > -structureHeightInBlocks; y--) {
+					var newChunkX = resize(chunkMouseX + x, numberOfBlocksPerAxis);
+					var newChunkZ = resize(chunkMouseY + z, numberOfBlocksPerAxis);
+					var newChunk = makeChunk(newChunkX, newChunkZ);
+					var newPositionWithinChunkX = (positionX + x) % CHUNK_DIMENTION;
+					var newPositionWithinChunkZ = (positionZ + z) % CHUNK_DIMENTION;
+					if (newPositionWithinChunkX < 0) {
+						newPositionWithinChunkX += CHUNK_DIMENTION;
+					}
+					if (newPositionWithinChunkZ < 0) {
+						newPositionWithinChunkZ += CHUNK_DIMENTION;
+					}
+					var internalCoordinate = getCoordinate(newPositionWithinChunkX, positionY + y, newPositionWithinChunkZ);
+					newChunk.BlockData[internalCoordinate] = 1;
+					if (newChunk.Modified === false) {
+						newChunk.Modified = true;
+					}
+				}
+			}
+		}
 		chunk.Structures.push(structure);
 		drawStructures(chunk);
 		buildMode = IDLE_MODE;
@@ -74,10 +100,19 @@ var Chunk = Module(function() {
 				return y;
 			}
 		}
+		throw new Error("Unable to find lowest block, " + x + "," + initialY + "," + z);
+	}
+
+	function resize(original, divisor) {
+		return Math.round((original - divisor / 2) / divisor);
 	}
 
 	function checkForSpace(structure) {
-		var possibleChunkCollisions = [];
+		var chunkX = resize(chunkMouseX, numberOfBlocksPerAxis);
+		var chunkZ = resize(chunkMouseY, numberOfBlocksPerAxis);
+		var structureDepthInBlocks = resize(structure[STRUCTURE_DEPTH], BLOCK_SIZE);
+		var structureWidthInBlocks = resize(structure[STRUCTURE_WIDTH], BLOCK_SIZE);
+		var structureHeightInBlocks = resize(structure[STRUCTURE_HEIGHT], BLOCK_SIZE);
 		var positionWithinChunkX = chunkMouseX % CHUNK_DIMENTION;
 		var positionWithinChunkZ = chunkMouseY % CHUNK_DIMENTION;
 		if (positionWithinChunkX < 0) {
@@ -86,32 +121,22 @@ var Chunk = Module(function() {
 		if (positionWithinChunkZ < 0) {
 			positionWithinChunkZ += CHUNK_DIMENTION;
 		}
-		var chunkX = Math.round((chunkMouseX - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
-		var chunkZ = Math.round((chunkMouseY - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
-		var structureDepthInBlocks = Math.round((structure[STRUCTURE_DEPTH] - BLOCK_SIZE / 2) / BLOCK_SIZE);
-		var structureWidthInBlocks = Math.round((structure[STRUCTURE_WIDTH] - BLOCK_SIZE / 2) / BLOCK_SIZE);
-		var structureHeightInBlocks = Math.round((structure[STRUCTURE_HEIGHT] - BLOCK_SIZE / 2) / BLOCK_SIZE);
 		var yIndex = 0;
 		var chunk = makeChunk(chunkX, chunkZ);
-		possibleChunkCollisions.push(chunk);
 		var heightMapCoordinate = getCoordinate(positionWithinChunkX, null, positionWithinChunkZ);
 		if (chunk.HeightMap[heightMapCoordinate] - 1 > viewPortY - 1) {
 			yIndex = chunk.HeightMap[heightMapCoordinate] - 1;
 		} else {
 			yIndex = getLowestBlock(chunk, positionWithinChunkX, positionWithinChunkZ) - 1; // we want to place above that block, not in it!
 		}
-		// console.log("Trying to place structure at:", chunkMouseX, yIndex, chunkMouseY);
 		var internalCoordinate = getCoordinate(positionWithinChunkX, yIndex, positionWithinChunkZ);
 		if (chunk.Blocks[internalCoordinate] === 0) {
 			for (var z = 0; z < structureDepthInBlocks; z++) {
 				for (var x = 0; x < structureWidthInBlocks; x++) {
 					for (var y = 1; y > -structureHeightInBlocks; y--) {
-						var newChunkX = Math.round(((chunkMouseX + x) - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
-						var newChunkZ = Math.round(((chunkMouseY + z) - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
+						var newChunkX = resize(chunkMouseX + x, numberOfBlocksPerAxis);
+						var newChunkZ = resize(chunkMouseY + z, numberOfBlocksPerAxis);
 						var newChunk = makeChunk(newChunkX, newChunkZ);
-						if (possibleChunkCollisions.indexOf(newChunk) === -1) {
-							possibleChunkCollisions.push(newChunk);
-						}
 						var newPositionWithinChunkX = (chunkMouseX + x) % CHUNK_DIMENTION;
 						var newPositionWithinChunkZ = (chunkMouseY + z) % CHUNK_DIMENTION;
 						if (newPositionWithinChunkX < 0) {
@@ -121,6 +146,12 @@ var Chunk = Module(function() {
 							newPositionWithinChunkZ += CHUNK_DIMENTION;
 						}
 						internalCoordinate = getCoordinate(newPositionWithinChunkX, yIndex + y, newPositionWithinChunkZ);
+						if (newChunk.Modified) {
+							if (newChunk.BlockData[internalCoordinate] === 1) {
+								console.warn("Cannot place structure at:", positionWithinChunkX, yIndex + y, positionWithinChunkZ, "Reason: structure in the way");
+								return -1;
+							}
+						}
 						if (y === 1) {
 							if (newChunk.Blocks[internalCoordinate] === 0) {
 								console.warn("Cannot place structure at:", chunkMouseX + x, yIndex + y, chunkMouseY + z, "Reason: no block to build on");
@@ -134,148 +165,11 @@ var Chunk = Module(function() {
 					}
 				}
 			}
-			if (positionWithinChunkX - 1 === -1) {
-				chunk = makeChunk(chunkX - 1, chunkZ);
-				if (possibleChunkCollisions.indexOf(chunk) === -1) {
-					possibleChunkCollisions.push(chunk);
-				}
-			}
-			if (positionWithinChunkZ - 1 === -1) {
-				chunk = makeChunk(chunkX, chunkZ - 1);
-				if (possibleChunkCollisions.indexOf(chunk) === -1) {
-					possibleChunkCollisions.push(chunk);
-				}
-			}
-			if (positionWithinChunkX - 1 === -1 && positionWithinChunkZ - 1 === -1) {
-				chunk = makeChunk(chunkX - 1, chunkZ - 1);
-				if (possibleChunkCollisions.indexOf(chunk) === -1) {
-					possibleChunkCollisions.push(chunk);
-				}
-			}
-			console.log(positionWithinChunkX, positionWithinChunkZ);
-			for (var r = 0; r < possibleChunkCollisions.length; r++) {
-				chunk = possibleChunkCollisions[r];
-				for (var i = 0; i < chunk.Structures.length; i++) {
-					var thisStructure = chunk.Structures[i];
-					var currentChunkX = chunk.Data[CHUNK_X];
-					var currentChunkZ = chunk.Data[CHUNK_Z];
-					var differenceX = chunkX + currentChunkX;
-					var differenceZ = chunkZ + currentChunkZ;
-					console.log(differenceX, differenceZ, positionWithinChunkX - differenceX, positionWithinChunkZ - differenceZ);
-					var result = simpleTest(currentChunkX, currentChunkZ, (positionWithinChunkX + differenceX) % CHUNK_DIMENTION, yIndex, (positionWithinChunkZ + differenceZ) % CHUNK_DIMENTION, structure, thisStructure);
-					if (result) {
-						console.warn("Cannot place structure at:", positionWithinChunkX, yIndex, positionWithinChunkZ, "Reason: structure in the way");
-						return -1;
-					}
-				}
-			}
 			return yIndex;
 		} else {
 			console.warn("Cannot place structure at:", positionWithinChunkX, yIndex, positionWithinChunkZ, "Reason: block in the way");
 			return -1;
 		}
-	}
-
-	function collision(AX1, AY1, AX2, AY2, BX1, BY1, BX2, BY2) {
-		if (AX1 <= BX1) {
-			console.log(AX1, "AX1 <= BX1", BX1);
-			if (AX2 <= BX1) {
-				console.log(AX2, "AX2 <= BX1", BX1);
-				return false;
-			} else {
-				console.log(AX2, "AX2 > BX1", BX1);
-				if (AY1 < BY1) {
-					console.log(AY1, "AY1 < BY1", BY1);
-					if (AY2 <= BY1) {
-						console.log(AY2, "AY2 <= BY1", BY1);
-						return false;
-					} else {
-						console.log(AY2, "AY2 > BY1", BY1);
-						return true;
-					}
-				} else {
-					console.log(AY1, "AY1 > BY1", BY1);
-					if (AY1 >= BY2) {
-						console.log(AY1, "AY1 >= BY2", BY2);
-						return false;
-					} else {
-						console.log(AY1, "AY1 < BY2", BY2);
-						return true;
-					}
-				}
-			}
-		} else {
-			console.log(AX1, "AX1 > BX1", BX1);
-			if (AX1 > BX2) {
-				console.log(AX1, "AX1 > BX2", BX2);
-				return false;
-			} else {
-				console.log(AX1, "AX1 < BX2", BX2);
-				if (AY1 < BY1) {
-					console.log(AY1, "AY1 < BY1", BY1);
-					if (AY2 <= BY1) {
-						console.log(AY2, "AY2 <= BY1", BY1);
-						return false;
-					} else {
-						console.log(AY2, "AY2 > BY1", BY1);
-						return true;
-					}
-				} else {
-					console.log(AY1, "AY1 > BY1", BY1);
-					if (AY1 >= BY2) {
-						console.log(AY1, "AY1 >= BY2", BY2);
-						return false;
-					} else {
-						console.log(AY1, "AY1 < BY2", BY2);
-						return true;
-					}
-				}
-			}
-		}
-		console.log("false");
-		return false; // should never get here
-	}
-
-	function simpleTest(chunkX, chunkZ, x, y, z, structureDefinition, structure) {
-		var chunkXSize = (chunkX * CHUNK_DIMENTION * BLOCK_SIZE);
-		var chunkZSize = (chunkZ * CHUNK_DIMENTION * BLOCK_SIZE);
-		var structure1Left = chunkXSize + (x * BLOCK_SIZE);
-		var structure1Right = structure1Left + structureDefinition[STRUCTURE_WIDTH];
-		var structure1Top = chunkZSize + (z * BLOCK_SIZE);
-		var structure1Bottom = structure1Top + structureDefinition[STRUCTURE_DEPTH];
-		var structure1Surface = y * BLOCK_SIZE;
-		var structure1Base = structure1Surface - structureDefinition[STRUCTURE_HEIGHT];
-		var structure2Left = chunkXSize + (structure[STRUCTURE_X] * BLOCK_SIZE);
-		var structure2Right = structure2Left + structure[STRUCTURE_WIDTH];
-		var structure2Top = chunkZSize + (structure[STRUCTURE_Z] * BLOCK_SIZE);
-		var structure2Bottom = structure2Top + structure[STRUCTURE_DEPTH];
-		var structure2Surface = structure[STRUCTURE_Y] * BLOCK_SIZE;
-		var structure2Base = structure2Surface - structure[STRUCTURE_HEIGHT];
-		var result = collision(structure1Left, structure1Top, structure1Right, structure1Bottom, structure2Left, structure2Top, structure2Right, structure2Bottom);
-		if (result) {
-			console.log("collide");
-			if (structure1Base < structure2Base) {
-				console.log(structure1Base, "structure1Base < structure2Base", structure2Base);
-				if (structure1Surface <= structure2Base) {
-					console.log(structure1Surface, "structure1Surface <= structure2Base", structure2Base);
-					return false;
-				} else {
-					console.log(structure1Surface, "structure1Surface > structure2Base", structure2Base);
-					return true;
-				}
-			} else {
-				console.log(structure1Base, "structure1Base > structure2Base", structure2Base);
-				if (structure1Base >= structure2Surface) {
-					console.log(structure1Base, "structure1Base >= structure2Surface", structure2Surface);
-					return false;
-				} else {
-					console.log(structure1Base, "structure1Base < structure2Surface", structure2Surface);
-					return true;
-				}
-			}
-			return false;
-		}
-		// return simpleTestX(x, y, z, structureDefinition, structure);
 	}
 
 	function mapMouse(type, value) {
@@ -405,6 +299,7 @@ var Chunk = Module(function() {
 				Blocks: blocks,
 				BlockData: blockData,
 				Structures: [],
+				Modified: false
 			};
 		}
 		chunk.Data[CHUNK_X] = positionX;
@@ -418,7 +313,7 @@ var Chunk = Module(function() {
 
 	function cleanChunks(attr) {
 		if (onScreen.indexOf(attr) === -1) {
-			if (chunks.current[attr] && chunks.current[attr].Renderable && chunks.current[attr].Structures.length === 0) {
+			if (chunks.current[attr] && chunks.current[attr].Renderable && chunks.current[attr].Modified === false) {
 				chunks.current[attr].Renderable = false;
 				chunks.old.push(chunks.current[attr]);
 				chunks.current[attr] = null;

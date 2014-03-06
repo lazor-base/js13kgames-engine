@@ -64,7 +64,7 @@ var Structures = Module(function() {
 				structure[STRUCTURE_X] = positionWithinChunkX;
 				structure[STRUCTURE_Y] = yIndex;
 				structure[STRUCTURE_Z] = positionWithinChunkZ;
-				CHUNK_ADD_STRUCTURE(structure);
+				CHUNK_ADD_STRUCTURE(positionWithinChunkX, yIndex, positionWithinChunkZ, structure);
 				Mode = IDLE_MODE;
 				return true;
 			}
