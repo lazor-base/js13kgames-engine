@@ -15,6 +15,7 @@ var Chunk = Module(function() {
 	var numberOfBlocksPerChunk = numberOfBlocksPerAxis * numberOfBlocksPerAxis * numberOfBlocksPerAxis;
 	var numberOfBlocksPerYAxis = numberOfBlocksPerAxis * numberOfBlocksPerAxis;
 	var tempBuilding = new PIXI.Graphics();
+	var miniMap = new PIXI.Graphics();
 	var structureDetails = null;
 	// var textHost = new PIXI.DisplayObjectContainer();
 	var layeredGraphics = [];
@@ -148,18 +149,18 @@ var Chunk = Module(function() {
 						internalCoordinate = getCoordinate(newPositionWithinChunkX, yIndex + y, newPositionWithinChunkZ);
 						if (newChunk.Modified) {
 							if (newChunk.BlockData[internalCoordinate] === 1) {
-								console.warn("Cannot place structure at:", positionWithinChunkX, yIndex + y, positionWithinChunkZ, "Reason: structure in the way");
+								// console.warn("Cannot place structure at:", positionWithinChunkX, yIndex + y, positionWithinChunkZ, "Reason: structure in the way");
 								return -1;
 							}
 						}
 						if (y === 1) {
 							if (newChunk.Blocks[internalCoordinate] === 0) {
-								console.warn("Cannot place structure at:", chunkMouseX + x, yIndex + y, chunkMouseY + z, "Reason: no block to build on");
+								// console.warn("Cannot place structure at:", chunkMouseX + x, yIndex + y, chunkMouseY + z, "Reason: no block to build on");
 								return -1;
 							}
 						}
 						if (newChunk.Blocks[internalCoordinate] > 0 && y < 1) {
-							console.warn("Cannot place structure at:", chunkMouseX + x, yIndex + y, chunkMouseY + z, "Reason: block in the way");
+							// console.warn("Cannot place structure at:", chunkMouseX + x, yIndex + y, chunkMouseY + z, "Reason: block in the way");
 							return -1;
 						}
 					}
@@ -167,9 +168,46 @@ var Chunk = Module(function() {
 			}
 			return yIndex;
 		} else {
-			console.warn("Cannot place structure at:", positionWithinChunkX, yIndex, positionWithinChunkZ, "Reason: block in the way");
+			// console.warn("Cannot place structure at:", positionWithinChunkX, yIndex, positionWithinChunkZ, "Reason: block in the way");
 			return -1;
 		}
+	}
+
+	function drawTempBuilding() {
+		if (buildMode !== PLACEMENT_MODE && (oldChunkMouseX === chunkMouseX || oldChunkMouseY === chunkMouseY)) {
+			return false;
+		}
+		tempBuilding.clear();
+		var chunkX = Math.round((chunkMouseX - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
+		var chunkZ = Math.round((chunkMouseY - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
+		var positionWithinChunkX = chunkMouseX % CHUNK_DIMENTION;
+		var positionWithinChunkZ = chunkMouseY % CHUNK_DIMENTION;
+		if (positionWithinChunkX < 0) {
+			positionWithinChunkX += CHUNK_DIMENTION;
+		}
+		if (positionWithinChunkZ < 0) {
+			positionWithinChunkZ += CHUNK_DIMENTION;
+		}
+		// var chunk = makeChunk(chunkX, chunkZ);
+		var xCoordinate = (positionWithinChunkX * BLOCK_SIZE) + viewPortX - (chunkX * -(BLOCK_SIZE * CHUNK_DIMENTION));
+		var zCoordinate = (positionWithinChunkZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -(BLOCK_SIZE * CHUNK_DIMENTION));
+		// var yCoordinate = getLowestBlock(chunk, xCoordinate, zCoordinate);
+		var space = checkForSpace(structureDetails);
+		// structureDetails.drawFn(tempBuilding, structureDetails, xCoordinate, getLowestBlock(chunk, xCoordinate, zCoordinate), zCoordinate);
+		var structureWidth = structureDetails[STRUCTURE_WIDTH];
+		var structureDepth = structureDetails[STRUCTURE_DEPTH];
+		tempBuilding.width = structureWidth;
+		tempBuilding.height = structureDepth;
+		var style = 0x00FF00;
+		if (space === -1) {
+			style = 0xFF0000;
+		}
+		tempBuilding.beginFill(style, 1);
+		tempBuilding.drawRect(xCoordinate, zCoordinate, structureWidth, structureDepth);
+		tempBuilding.endFill();
+		tempBuilding.beginFill(0x000000, 1);
+		tempBuilding.drawRect(xCoordinate + 5, zCoordinate + 5, structureWidth - 10, structureDepth - 10);
+		tempBuilding.endFill();
 	}
 
 	function mapMouse(type, value) {
@@ -184,39 +222,7 @@ var Chunk = Module(function() {
 		if (text) {
 			text.setText(chunkMouseX + "," + viewPortY + "," + chunkMouseY);
 		}
-		if (buildMode === PLACEMENT_MODE && (oldChunkMouseX !== chunkMouseX || oldChunkMouseY !== chunkMouseY)) {
-			tempBuilding.clear();
-			var chunkX = Math.round((chunkMouseX - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
-			var chunkZ = Math.round((chunkMouseY - numberOfBlocksPerAxis / 2) / numberOfBlocksPerAxis);
-			var positionWithinChunkX = chunkMouseX % CHUNK_DIMENTION;
-			var positionWithinChunkZ = chunkMouseY % CHUNK_DIMENTION;
-			if (positionWithinChunkX < 0) {
-				positionWithinChunkX += CHUNK_DIMENTION;
-			}
-			if (positionWithinChunkZ < 0) {
-				positionWithinChunkZ += CHUNK_DIMENTION;
-			}
-			// var chunk = makeChunk(chunkX, chunkZ);
-			var xCoordinate = (positionWithinChunkX * BLOCK_SIZE) + viewPortX - (chunkX * -512);
-			var zCoordinate = (positionWithinChunkZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -512);
-			// var yCoordinate = getLowestBlock(chunk, xCoordinate, zCoordinate);
-			var space = checkForSpace(structureDetails);
-			// structureDetails.drawFn(tempBuilding, structureDetails, xCoordinate, getLowestBlock(chunk, xCoordinate, zCoordinate), zCoordinate);
-			var structureWidth = structureDetails[STRUCTURE_WIDTH];
-			var structureDepth = structureDetails[STRUCTURE_DEPTH];
-			tempBuilding.width = structureWidth;
-			tempBuilding.height = structureDepth;
-			var style = 0x00FF00;
-			if (space === -1) {
-				style = 0xFF0000;
-			}
-			tempBuilding.beginFill(style, 1);
-			tempBuilding.drawRect(xCoordinate, zCoordinate, structureWidth, structureDepth);
-			tempBuilding.endFill();
-			tempBuilding.beginFill(0x000000, 1);
-			tempBuilding.drawRect(xCoordinate + 5, zCoordinate + 5, structureWidth - 10, structureDepth - 10);
-			tempBuilding.endFill();
-		}
+		drawTempBuilding();
 	}
 
 	function moveViewPort(x, y, z) {
@@ -228,6 +234,7 @@ var Chunk = Module(function() {
 			mapOffsetX += x;
 			// graphics.position.x = mapOffsetX;
 			// textHost.position.x = mapOffsetX;
+			// tempBuilding.position.x = mapOffsetX;
 			for (var i = 0; i < 16; i++) {
 				layeredGraphics[i].position.x = mapOffsetX;
 				layeredText[i].position.x = mapOffsetX;
@@ -261,6 +268,7 @@ var Chunk = Module(function() {
 			mapOffsetY += z;
 			// graphics.position.y = mapOffsetY;
 			// textHost.position.y = mapOffsetY;
+			// tempBuilding.position.y = mapOffsetY;
 			for (var e = 0; e < 16; e++) {
 				layeredGraphics[e].position.y = mapOffsetY;
 				layeredText[e].position.y = mapOffsetY;
@@ -396,10 +404,17 @@ var Chunk = Module(function() {
 				layeredGraphics[f].position.x = 0;
 				layeredGraphics[f].position.y = 0;
 			}
+			miniMap.clear();
+			miniMap.beginFill(0x000000, 1);
+			miniMap.drawRect(-5, -5, miniMap.width + 10, miniMap.height + 10);
+			miniMap.endFill();
 			// graphics.position.x = 0;
 			// textHost.position.x = 0;
 			// graphics.position.y = 0;
 			// textHost.position.y = 0;
+			tempBuilding.position.x = 0;
+			tempBuilding.position.y = 0;
+			drawTempBuilding();
 			mapOffsetX = 0;
 			mapOffsetY = 0;
 			for (var r = -1; r < verticalChunks + 1; r++) {
@@ -420,6 +435,43 @@ var Chunk = Module(function() {
 		// console.timeEnd("divide screen")
 	}
 
+	function color(number) {
+		var hex = (15 - number);
+		if (hex === 0) {
+			return 0x000000;
+		} else if (hex === 1) {
+			return 0x111111;
+		} else if (hex === 2) {
+			return 0x222222;
+		} else if (hex === 3) {
+			return 0x333333;
+		} else if (hex === 4) {
+			return 0x444444;
+		} else if (hex === 5) {
+			return 0x555555;
+		} else if (hex === 6) {
+			return 0x666666;
+		} else if (hex === 7) {
+			return 0x777777;
+		} else if (hex === 8) {
+			return 0x888888;
+		} else if (hex === 9) {
+			return 0x999999;
+		} else if (hex === 10) {
+			return 0xAAAAAA;
+		} else if (hex === 11) {
+			return 0xBBBBBB;
+		} else if (hex === 12) {
+			return 0xCCCCCC;
+		} else if (hex === 13) {
+			return 0xDDDDDD;
+		} else if (hex === 14) {
+			return 0xEEEEEE;
+		} else if (hex === 15) {
+			return 0xFFFFFF;
+		}
+	}
+
 	function drawBlock(heightMapData, chunk, x, y, z, xCoordinate, zCoordinate) {
 		var internalCoordinate = getCoordinate(x, y, z);
 		var blockId = chunk.Blocks[internalCoordinate];
@@ -430,14 +482,22 @@ var Chunk = Module(function() {
 			}
 			var block = blockCache[blockId];
 			block.drawFn(layeredGraphics[y], block, xCoordinate, y, zCoordinate, heightMapData, blockData);
+			var miniMapX = (xCoordinate / BLOCK_SIZE) * 4;
+			var miniMapZ = (zCoordinate / BLOCK_SIZE) * 4;
+			if (miniMapX > -1 && miniMapX < miniMap.width && miniMapZ > -1 && miniMapZ < miniMap.height) {
+				var style = color(y);
+				miniMap.beginFill(style, 1);
+				miniMap.drawRect(miniMapX, miniMapZ, 4, 4);
+				miniMap.endFill();
+			}
 		}
 	}
 
 	function drawPartialChunk(chunk, x, z, chunkX, chunkZ) {
 		var heightMapCoordinate = getCoordinate(x, null, z);
 		var heightMapData = chunk.HeightMap[heightMapCoordinate];
-		var xCoordinate = (x * BLOCK_SIZE) + viewPortX - (chunkX * -512);
-		var zCoordinate = (z * BLOCK_SIZE) + viewPortZ - (chunkZ * -512);
+		var xCoordinate = (x * BLOCK_SIZE) + viewPortX - (chunkX * -(BLOCK_SIZE * CHUNK_DIMENTION));
+		var zCoordinate = (z * BLOCK_SIZE) + viewPortZ - (chunkZ * -(BLOCK_SIZE * CHUNK_DIMENTION));
 		if (viewPortY > heightMapData) {
 			var y = getLowestBlock(chunk, x, z);
 			return drawBlock(heightMapData, chunk, x, y, z, xCoordinate, zCoordinate);
@@ -462,8 +522,8 @@ var Chunk = Module(function() {
 		// 	font: "50px Arial",
 		// 	fill: "red"
 		// });
-		// text.position.x = viewPortX - (chunkX * -512);
-		// text.position.y = viewPortZ - (chunkZ * -512);
+		// text.position.x = viewPortX - (chunkX * -(BLOCK_SIZE * CHUNK_DIMENTION));
+		// text.position.y = viewPortZ - (chunkZ * -(BLOCK_SIZE * CHUNK_DIMENTION));
 		// textHost.addChild(text);
 		// console.timeEnd("render Chunk");
 	}
@@ -478,16 +538,16 @@ var Chunk = Module(function() {
 			// if (structureBase > viewPortY) {
 			var structureX = structure[STRUCTURE_X];
 			var structureZ = structure[STRUCTURE_Z];
-			var xCoordinate = (structureX * BLOCK_SIZE) + viewPortX - (chunkX * -512);
-			var zCoordinate = (structureZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -512);
+			var xCoordinate = (structureX * BLOCK_SIZE) + viewPortX - (chunkX * -(BLOCK_SIZE * CHUNK_DIMENTION));
+			var zCoordinate = (structureZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -(BLOCK_SIZE * CHUNK_DIMENTION));
 			var structureDefinition = STRUCTURES_GET(chunk.Structures[i][STRUCTURE_ID]);
 			structureDefinition.drawFn(layeredGraphics[structureY], structure, xCoordinate, structureY, zCoordinate);
 			var text = new PIXI.Text(structureDefinition.symbol, {
-				font: ((structure[STRUCTURE_WIDTH] + structure[STRUCTURE_HEIGHT]) / 2) + "px Arial",
-				fill: structureDefinition.colorString
+				font: ((structure[STRUCTURE_WIDTH] + structure[STRUCTURE_HEIGHT]) / (2)) + "px Arial",
+				fill: "darkgrey"
 			});
-			text.position.x = (structureX * BLOCK_SIZE) + viewPortX - (chunkX * -512) + (structure[STRUCTURE_WIDTH] / 5);
-			text.position.y = (structureZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -512) - (structure[STRUCTURE_HEIGHT] / 16);
+			text.position.x = (structureX * BLOCK_SIZE) + viewPortX - (chunkX * -(BLOCK_SIZE * CHUNK_DIMENTION)) + (structure[STRUCTURE_WIDTH] / 5);
+			text.position.y = (structureZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -(BLOCK_SIZE * CHUNK_DIMENTION)) - (structure[STRUCTURE_HEIGHT] / 16);
 			layeredText[structureY].addChild(text);
 			// }
 		}
@@ -513,7 +573,12 @@ var Chunk = Module(function() {
 			DRAW_STAGE.addChild(layeredGraphics[i]);
 			DRAW_STAGE.addChild(layeredText[i]);
 		}
+		miniMap.width = Math.ceil(window.innerWidth / BLOCK_SIZE) * 4;
+		miniMap.height = Math.ceil(window.innerHeight / BLOCK_SIZE) * 4;
+		miniMap.position.x = window.innerWidth - miniMap.width - 5;
+		miniMap.position.y = 5;
 		DRAW_STAGE.addChild(tempBuilding);
+		DRAW_STAGE.addChild(miniMap);
 		tempBuilding.alpha = 0.25;
 		DRAW_STAGE.addChild(text);
 	});

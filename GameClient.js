@@ -39,17 +39,15 @@ var Game = Module(function() {
 				CHUNK_MAP_MOUSE("Y", value);
 			}
 			if (action === MOUSE_LEFT) {
+				if (value === 1) {
+					STRUCTURES_PLACE();
+				}
+			}
+			if (action === MOUSE_RIGHT) {
 				clickXLocation = lastX;
 				clickYLocation = lastY;
-				if (value === 1) {
-					var result = STRUCTURES_PLACE();
-					if (result === false) {
-						click = value;
-					}
-				}
+				click = value;
 				if (value === 0) {
-					click = value;
-					// CONTROL_TRUE_MOUSE_DATA(false, MOUSE_X, MOUSE_Y);
 					CHUNK_DIVIDE_SCREEN();
 				}
 			}
@@ -83,11 +81,12 @@ var Game = Module(function() {
 	}
 
 	function setup() {
-		CONFIG_ACTION(MOUSE_X, MOUSE_Y, MOUSE_LEFT, SCROLL_Y);
+		CONFIG_ACTION(MOUSE_X, MOUSE_Y, MOUSE_LEFT, MOUSE_RIGHT, SCROLL_Y);
 		CONFIG_INPUT(MOUSE, 0);
 		CONFIG_BIND(MOUSE, 0, MOUSE_X, MOUSE_MOVE_X);
 		CONFIG_BIND(MOUSE, 0, MOUSE_Y, MOUSE_MOVE_Y);
 		CONFIG_BIND(MOUSE, 0, MOUSE_LEFT, MOUSE_LEFT_CLICK);
+		CONFIG_BIND(MOUSE, 0, MOUSE_RIGHT, MOUSE_RIGHT_CLICK);
 		CONFIG_BIND(MOUSE, 0, SCROLL_Y, MOUSE_WHEEL_Y);
 		CONTROL_LISTEN(document, MOUSE);
 		BLOCK_MAKE(0, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
