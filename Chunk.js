@@ -15,6 +15,7 @@ var Chunk = Module(function() {
 	var numberOfBlocksPerChunk = numberOfBlocksPerAxis * numberOfBlocksPerAxis * numberOfBlocksPerAxis;
 	var numberOfBlocksPerYAxis = numberOfBlocksPerAxis * numberOfBlocksPerAxis;
 	var tempBuilding = new PIXI.Graphics();
+	var crosshatch = new PIXI.Graphics();
 	var miniMap = new PIXI.Graphics();
 	var structureDetails = null;
 	// var textHost = new PIXI.DisplayObjectContainer();
@@ -50,7 +51,17 @@ var Chunk = Module(function() {
 	// functions
 
 	function getCoordinate(x, y, z) {
-		var result = ((y || 0) * numberOfBlocksPerAxis + z) * numberOfBlocksPerAxis + x;
+		if (x < 0 || typeof x !== "number") {
+			x = 0;
+		}
+		if (y < 0 || typeof y !== "number") {
+			y = 0;
+		}
+		if (z < 0 || typeof z !== "number") {
+			z = 0;
+		}
+
+		var result = (y * numberOfBlocksPerAxis + z) * numberOfBlocksPerAxis + x;
 		if (result < 0) {
 			throw new Error("Attempt to index block out of range, " + x + "," + y + "," + z);
 		}
@@ -405,6 +416,7 @@ var Chunk = Module(function() {
 				layeredGraphics[f].position.y = 0;
 			}
 			miniMap.clear();
+			crosshatch.clear();
 			miniMap.beginFill(0x000000, 1);
 			miniMap.drawRect(-5, -5, miniMap.width + 10, miniMap.height + 10);
 			miniMap.endFill();
@@ -475,6 +487,7 @@ var Chunk = Module(function() {
 	function drawBlock(heightMapData, chunk, x, y, z, xCoordinate, zCoordinate) {
 		var internalCoordinate = getCoordinate(x, y, z);
 		var blockId = chunk.Blocks[internalCoordinate];
+		var blockIdAbove = chunk.Blocks[getCoordinate(x, y - 1 || 0, z)];
 		if (blockId) {
 			var blockData = chunk.BlockData[internalCoordinate] || 0;
 			if (!blockCache[blockId]) {
@@ -482,6 +495,16 @@ var Chunk = Module(function() {
 			}
 			var block = blockCache[blockId];
 			block.drawFn(layeredGraphics[y], block, xCoordinate, y, zCoordinate, heightMapData, blockData);
+			if (blockIdAbove > 0) {
+				crosshatch.lineStyle(2, 0xff0000, 0.5);
+				crosshatch.beginFill(0xFF7E00, 1);
+				crosshatch.drawRect(xCoordinate+1, zCoordinate+1, BLOCK_SIZE-2, BLOCK_SIZE-2);
+				crosshatch.endFill();
+				crosshatch.moveTo(xCoordinate, zCoordinate);
+				crosshatch.lineTo(xCoordinate+BLOCK_SIZE, zCoordinate+BLOCK_SIZE);
+				crosshatch.lineStyle(0, 0, 0);
+				// crosshatch.moveTo(0, 0);
+			}
 			var miniMapX = (xCoordinate / BLOCK_SIZE) * 4;
 			var miniMapZ = (zCoordinate / BLOCK_SIZE) * 4;
 			if (miniMapX > -1 && miniMapX < miniMap.width && miniMapZ > -1 && miniMapZ < miniMap.height) {
@@ -568,7 +591,7 @@ var Chunk = Module(function() {
 			fill: "red"
 		});
 		text.position.x = 10;
-		text.position.y = 10;
+		text.position.y = 20;
 		for (var i = 15; i > -1; i--) {
 			DRAW_STAGE.addChild(layeredGraphics[i]);
 			DRAW_STAGE.addChild(layeredText[i]);
@@ -577,6 +600,8 @@ var Chunk = Module(function() {
 		miniMap.height = Math.ceil(window.innerHeight / BLOCK_SIZE) * 4;
 		miniMap.position.x = window.innerWidth - miniMap.width - 5;
 		miniMap.position.y = 5;
+		DRAW_STAGE.addChild(crosshatch);
+		crosshatch.alpha = 0.25;
 		DRAW_STAGE.addChild(tempBuilding);
 		DRAW_STAGE.addChild(miniMap);
 		tempBuilding.alpha = 0.25;

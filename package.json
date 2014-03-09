@@ -3,8 +3,9 @@
 	"main": "app://RTS/index.html",
 	"name": "RTS",
 	"description": "RTS Game Client",
-	"version": "0.1.0a",
+	"version": "0.1.0-alpha+03.08.14",
 	"keywords": ["node-webkit", "rts"],
+	"js-flags": "--harmony",
 	"window": {
 		"title": "rts",
 		"toolbar": true,
@@ -15,7 +16,20 @@
 		"min_width": 400,
 		"min_height": 200
 	},
-	"webkit": {
-		"plugin": true
-	}
+	"maintainers": [{
+		"name": "Christopher Hall",
+		"email": "Biomech.ArkahnX@gmail.com",
+		"web": "http://arka-tech.net",
+	}],
+	"contributors": [{
+		"name": "Christopher Hall",
+		"email": "Biomech.ArkahnX@gmail.com",
+		"web": "http://arka-tech.net",
+	}],
+	"bugs": "https://github.com/lazor-base/js13kgames-engine/issues",
+	"repositories": [{
+		"type": "git",
+		"url": "https://github.com/lazor-base/js13kgames-engine.git",
+		"path": "lazor-base/js13kgames-engine"
+	}]
 }

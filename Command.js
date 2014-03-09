@@ -1,7 +1,4 @@
-var Command = Module(function(event) {
-	// name: List
-	// target: Client,Server
-	// filenames: Engine,Command
+var Command = (function(event) {
 
 	// variables
 	var commandList = [];

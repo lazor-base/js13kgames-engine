@@ -78,6 +78,50 @@ function getCoordinate(x, y, z) {
 	}
 }
 
+function fillArray(blockArray, blockDataArray, heightDataArray, XCoord, ZCoord) {
+	"use strict";
+	Math.seedrandom("seed" + XCoord + ZCoord);
+	Noise = new SimplexNoise(Math.random);
+	var previousZBlock = 0;
+	for (var z = 0; z < numberOfBlocksPerAxis; z++) {
+		var previousXBlock = 0;
+		for (var x = 0; x < numberOfBlocksPerAxis; x++) {
+			var previousYBlock = 0;
+			var heightMapSet = false;
+			var y = 0;
+			var internalCoordinate = 0;
+			var heightMapCoordinate = 0;
+			var data = 0;
+			for (y = numberOfBlocksPerAxis - 1; y > -1; y--) {
+				var internalCoordinateX = getCoordinate(x - 1, y, z);
+				var internalCoordinateZ = getCoordinate(x, y, z - 1);
+				if (internalCoordinateX < 0) {
+					internalCoordinateX = 0;
+				}
+				if (internalCoordinateZ < 0) {
+					internalCoordinateZ = 0;
+				}
+				previousXBlock = blockArray[internalCoordinateX];
+				previousZBlock = blockArray[internalCoordinateZ];
+				data = chunkBlockAlgorithm(x, y, z, previousXBlock, previousYBlock, previousZBlock);
+				internalCoordinate = getCoordinate(x, y, z);
+				blockArray[internalCoordinate] = data;
+				previousYBlock = data;
+			}
+			for (y = 0; y < numberOfBlocksPerAxis; y++) {
+				internalCoordinate = getCoordinate(x, y, z);
+				data = blockArray[internalCoordinate];
+				if (heightMapSet === false && data > 0) {
+					heightMapSet = true;
+					heightMapCoordinate = getCoordinate(x, null, z);
+					heightDataArray[heightMapCoordinate] = y;
+					y = numberOfBlocksPerAxis;
+				}
+			}
+		}
+	}
+}
+
 self.addEventListener('message', function(event) {
 	"use strict";
 	if (event.data[OPERATION] === BUILD_CHUNK) {
@@ -86,46 +130,7 @@ self.addEventListener('message', function(event) {
 		var heightDataArray = new Uint8Array(event.data[HEIGHT_ARRAY]);
 		var XCoord = event.data[X_COORDINATE];
 		var ZCoord = event.data[Z_COORDINATE];
-		Math.seedrandom("seed" + XCoord + ZCoord);
-		Noise = new SimplexNoise(Math.random);
-		var previousZBlock = 0;
-		for (var z = 0; z < numberOfBlocksPerAxis; z++) {
-			var previousXBlock = 0;
-			for (var x = 0; x < numberOfBlocksPerAxis; x++) {
-				var previousYBlock = 0;
-				var heightMapSet = false;
-				var y = 0;
-				var internalCoordinate = 0;
-				var heightMapCoordinate = 0;
-				var data = 0;
-				for (y = numberOfBlocksPerAxis - 1; y > -1; y--) {
-					var internalCoordinateX = getCoordinate(x - 1, y, z);
-					var internalCoordinateZ = getCoordinate(x, y, z - 1);
-					if (internalCoordinateX < 0) {
-						internalCoordinateX = 0;
-					}
-					if (internalCoordinateZ < 0) {
-						internalCoordinateZ = 0;
-					}
-					previousXBlock = blockArray[internalCoordinateX];
-					previousZBlock = blockArray[internalCoordinateZ];
-					data = chunkBlockAlgorithm(x, y, z, previousXBlock, previousYBlock, previousZBlock);
-					internalCoordinate = getCoordinate(x, y, z);
-					blockArray[internalCoordinate] = data;
-					previousYBlock = data;
-				}
-				for (y = 0; y < numberOfBlocksPerAxis; y++) {
-					internalCoordinate = getCoordinate(x, y, z);
-					data = blockArray[internalCoordinate];
-					if (heightMapSet === false && data > 0) {
-						heightMapSet = true;
-						heightMapCoordinate = getCoordinate(x, null, z);
-						heightDataArray[heightMapCoordinate] = y;
-						y = numberOfBlocksPerAxis;
-					}
-				}
-			}
-		}
+		fillArray(blockArray, blockDataArray, heightDataArray, XCoord, ZCoord);
 		self.postMessage([CHUNK_COMPLETE, XCoord, ZCoord, blockArray.buffer, blockDataArray.buffer, heightDataArray.buffer], [blockArray.buffer, blockDataArray.buffer, heightDataArray.buffer]);
 	}
 }, false);
