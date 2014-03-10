@@ -19,12 +19,12 @@
 	"maintainers": [{
 		"name": "Christopher Hall",
 		"email": "Biomech.ArkahnX@gmail.com",
-		"web": "http://arka-tech.net",
+		"web": "http://arka-tech.net"
 	}],
 	"contributors": [{
 		"name": "Christopher Hall",
 		"email": "Biomech.ArkahnX@gmail.com",
-		"web": "http://arka-tech.net",
+		"web": "http://arka-tech.net"
 	}],
 	"bugs": "https://github.com/lazor-base/js13kgames-engine/issues",
 	"repositories": [{

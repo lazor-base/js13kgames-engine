@@ -89,10 +89,56 @@ var Game = Module(function() {
 		CONFIG_BIND(MOUSE, 0, MOUSE_RIGHT, MOUSE_RIGHT_CLICK);
 		CONFIG_BIND(MOUSE, 0, SCROLL_Y, MOUSE_WHEEL_Y);
 		CONTROL_LISTEN(document, MOUSE);
-		BLOCK_MAKE(0, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-		BLOCK_MAKE(1, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-		STRUCTURES_DEFINE(0, "S", "Small Structure", "", BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, 0xFF0000, "#FF0000", 1);
-		STRUCTURES_DEFINE(1, "L", "Large Structure", "", BLOCK_SIZE * 2, BLOCK_SIZE * 2, BLOCK_SIZE * 2, 0x0000FF, "#0000FF", 1);
+		// var block1 = SYSTEM_DEFINE_CHILD(BLOCK);
+		// block1.set(S_ID, 0);
+		// BLOCK_SET(block1);
+		// var block2 = SYSTEM_DEFINE_CHILD(BLOCK);
+		// block2.set(S_ID, 1);
+		// BLOCK_SET(block2);
+		// console.log(block1, block2);
+		BLOCK_MAKE(BLOCK0, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+		BLOCK_MAKE(BLOCK1, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+		STRUCTURES_DEFINE(STRUCTURE0, "S", "Small Structure", BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, "#FF0000", 0xFF0000, 1);
+		STRUCTURES_DEFINE(STRUCTURE1, "L", "Large Structure", BLOCK_SIZE * 2, BLOCK_SIZE * 2, BLOCK_SIZE * 2, "#0000FF", 0x0000FF, 1);
+	}
+
+	function systems() {
+		SYSTEM_DEFINE_SYSTEM(S_SHAPE, false, new Uint16Array(STRUCTURE_ENTRIES), S_TYPED_ARRAY, function(width, height, depth) {
+			return new Uint16Array([width, height, depth]);
+		}, function(data) {
+			return new Uint16Array(data);
+		});
+		SYSTEM_DEFINE_SYSTEM(S_POSITION, true, new Int32Array(POSITION_ENTRIES), S_TYPED_ARRAY, function(x, y, z) {
+			return new Int32Array([x, y, z]);
+		}, function(data) {
+			return new Int32Array(data);
+		});
+		SYSTEM_DEFINE_SYSTEM(S_DESCRIPTION, false, "description", S_STRING, function(description) {
+			return description;
+		}, function(data) {
+			return data;
+		});
+		SYSTEM_DEFINE_SYSTEM(S_COLOR, false, ["#000000", 0xFF0000], S_ARRAY, function(hexidecimal, decimal) {
+			return [hexidecimal, decimal];
+		}, function(data) {
+			return [data[0], data[1]];
+		});
+		SYSTEM_DEFINE_SYSTEM(S_ID, false, 0, S_NUMBER, function(number) {
+			return number;
+		}, function(data) {
+			return data;
+		});
+		SYSTEM_DEFINE_SYSTEM(S_DRAW, false, function() {}, S_FUNCTION, function(fn) {
+			return fn;
+		}, function(data) {
+			return data;
+		});
+		SYSTEM_DEFINE_SYSTEM(S_SYMBOL, false, "description", S_STRING, function(description) {
+			return description;
+		}, function(data) {
+			return data;
+		});
+		SYSTEM_READY();
 	}
 	// end functions
 	// other
@@ -101,6 +147,7 @@ var Game = Module(function() {
 	return {
 		// return
 		setup: setup,
+		systems: systems,
 		start: start
 		// end return
 	};

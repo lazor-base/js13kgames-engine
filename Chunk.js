@@ -71,9 +71,9 @@ var Chunk = Module(function() {
 	function addStructure(positionX, positionY, positionZ, structure) {
 		var chunkX = resize(chunkMouseX, numberOfBlocksPerAxis);
 		var chunkZ = resize(chunkMouseY, numberOfBlocksPerAxis);
-		var structureDepthInBlocks = resize(structure[STRUCTURE_DEPTH], BLOCK_SIZE);
-		var structureWidthInBlocks = resize(structure[STRUCTURE_WIDTH], BLOCK_SIZE);
-		var structureHeightInBlocks = resize(structure[STRUCTURE_HEIGHT], BLOCK_SIZE);
+		var structureDepthInBlocks = resize(structure.get(S_SHAPE, DEPTH), BLOCK_SIZE);
+		var structureWidthInBlocks = resize(structure.get(S_SHAPE, WIDTH), BLOCK_SIZE);
+		var structureHeightInBlocks = resize(structure.get(S_SHAPE, HEIGHT), BLOCK_SIZE);
 		var chunk = makeChunk(chunkX, chunkZ);
 		for (var z = 0; z < structureDepthInBlocks; z++) {
 			for (var x = 0; x < structureWidthInBlocks; x++) {
@@ -122,9 +122,9 @@ var Chunk = Module(function() {
 	function checkForSpace(structure) {
 		var chunkX = resize(chunkMouseX, numberOfBlocksPerAxis);
 		var chunkZ = resize(chunkMouseY, numberOfBlocksPerAxis);
-		var structureDepthInBlocks = resize(structure[STRUCTURE_DEPTH], BLOCK_SIZE);
-		var structureWidthInBlocks = resize(structure[STRUCTURE_WIDTH], BLOCK_SIZE);
-		var structureHeightInBlocks = resize(structure[STRUCTURE_HEIGHT], BLOCK_SIZE);
+		var structureDepthInBlocks = resize(structure.get(S_SHAPE, DEPTH), BLOCK_SIZE);
+		var structureWidthInBlocks = resize(structure.get(S_SHAPE, WIDTH), BLOCK_SIZE);
+		var structureHeightInBlocks = resize(structure.get(S_SHAPE, HEIGHT), BLOCK_SIZE);
 		var positionWithinChunkX = chunkMouseX % CHUNK_DIMENTION;
 		var positionWithinChunkZ = chunkMouseY % CHUNK_DIMENTION;
 		if (positionWithinChunkX < 0) {
@@ -205,8 +205,8 @@ var Chunk = Module(function() {
 		// var yCoordinate = getLowestBlock(chunk, xCoordinate, zCoordinate);
 		var space = checkForSpace(structureDetails);
 		// structureDetails.drawFn(tempBuilding, structureDetails, xCoordinate, getLowestBlock(chunk, xCoordinate, zCoordinate), zCoordinate);
-		var structureWidth = structureDetails[STRUCTURE_WIDTH];
-		var structureDepth = structureDetails[STRUCTURE_DEPTH];
+		var structureWidth = structureDetails.get(S_SHAPE, WIDTH);
+		var structureDepth = structureDetails.get(S_SHAPE, DEPTH);
 		tempBuilding.width = structureWidth;
 		tempBuilding.height = structureDepth;
 		var style = 0x00FF00;
@@ -494,7 +494,7 @@ var Chunk = Module(function() {
 				blockCache[blockId] = BLOCK_GET(blockId);
 			}
 			var block = blockCache[blockId];
-			block.drawFn(layeredGraphics[y], block, xCoordinate, y, zCoordinate, heightMapData, blockData);
+			block.get(S_DRAW)(layeredGraphics[y], block, xCoordinate, y, zCoordinate, heightMapData, blockData);
 			if (blockIdAbove > 0) {
 				crosshatch.lineStyle(2, 0xff0000, 0.5);
 				crosshatch.beginFill(0xFF7E00, 1);
@@ -556,21 +556,21 @@ var Chunk = Module(function() {
 		var chunkZ = chunk.Data[CHUNK_Z];
 		for (var i = 0; i < chunk.Structures.length; i++) {
 			var structure = chunk.Structures[i];
-			var structureY = structure[STRUCTURE_Y];
+			var structureY = structure.get(S_POSITION, Y);
 			// var structureBase = structureY + (structure[STRUCTURE_HEIGHT] / BLOCK_SIZE);
 			// if (structureBase > viewPortY) {
-			var structureX = structure[STRUCTURE_X];
-			var structureZ = structure[STRUCTURE_Z];
+			var structureX = structure.get(S_POSITION, X);
+			var structureZ = structure.get(S_POSITION, Z);
 			var xCoordinate = (structureX * BLOCK_SIZE) + viewPortX - (chunkX * -(BLOCK_SIZE * CHUNK_DIMENTION));
 			var zCoordinate = (structureZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -(BLOCK_SIZE * CHUNK_DIMENTION));
-			var structureDefinition = STRUCTURES_GET(chunk.Structures[i][STRUCTURE_ID]);
-			structureDefinition.drawFn(layeredGraphics[structureY], structure, xCoordinate, structureY, zCoordinate);
-			var text = new PIXI.Text(structureDefinition.symbol, {
-				font: ((structure[STRUCTURE_WIDTH] + structure[STRUCTURE_HEIGHT]) / (2)) + "px Arial",
+			var structureDefinition = STRUCTURES_GET(structure.get(S_ID));
+			structureDefinition.get(S_DRAW)(layeredGraphics[structureY], structure, xCoordinate, structureY, zCoordinate);
+			var text = new PIXI.Text(structureDefinition.get(S_SYMBOL), {
+				font: ((structure.get(S_SHAPE, WIDTH) + structure.get(S_SHAPE, DEPTH)) / (2)) + "px Arial",
 				fill: "darkgrey"
 			});
-			text.position.x = (structureX * BLOCK_SIZE) + viewPortX - (chunkX * -(BLOCK_SIZE * CHUNK_DIMENTION)) + (structure[STRUCTURE_WIDTH] / 5);
-			text.position.y = (structureZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -(BLOCK_SIZE * CHUNK_DIMENTION)) - (structure[STRUCTURE_HEIGHT] / 16);
+			text.position.x = (structureX * BLOCK_SIZE) + viewPortX - (chunkX * -(BLOCK_SIZE * CHUNK_DIMENTION)) + (structure.get(S_SHAPE, WIDTH) / 5);
+			text.position.y = (structureZ * BLOCK_SIZE) + viewPortZ - (chunkZ * -(BLOCK_SIZE * CHUNK_DIMENTION)) - (structure.get(S_SHAPE, DEPTH) / 16);
 			layeredText[structureY].addChild(text);
 			// }
 		}

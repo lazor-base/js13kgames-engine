@@ -13,35 +13,47 @@ var Structures = Module(function() {
 	// functions
 
 	function defaultStructureDraw(graphic, structure, x, y, z) {
-		var structureWidth = structure[STRUCTURE_WIDTH];
-		var structureDepth = structure[STRUCTURE_DEPTH];
+		var structureWidth = structure.get(S_SHAPE, WIDTH);
+		var structureDepth = structure.get(S_SHAPE, DEPTH);
 		graphic.width = structureWidth;
 		graphic.height = structureDepth;
-		var style = structure[STRUCTURE_COLOR];
+		var style = structure.get(S_COLOR, DEC);
 		graphic.beginFill(style, 1);
 		graphic.drawRect(x, z, structureWidth, structureDepth);
 		graphic.endFill();
 		graphic.beginFill(0x000000, 1);
-		graphic.drawRect(x + 5, z + 5, structureWidth - 10, structureDepth - 10);
+		graphic.drawRect(x + 3, z + 3, structureWidth - 6, structureDepth - 6);
 		graphic.endFill();
 	}
 
-	function defineStructure(id, symbol, name, description, width, height, depth, color, colorString, health, textureFn) {
+	function defineStructure(id, symbol, description, width, height, depth, colorString, color, health, textureFn) {
 		if (uniqueStructures[id]) {
 			throw new Error("Structure ID already exists");
 		}
-		var structure = new Uint32Array(STRUCTURE_DEFINITION_ENTRIES);
-		structure[STRUCTURE_ID] = id;
-		structure[STRUCTURE_WIDTH] = width;
-		structure[STRUCTURE_HEIGHT] = height;
-		structure[STRUCTURE_DEPTH] = depth;
-		structure[STRUCTURE_COLOR] = color;
-		structure[STRUCTURE_HEALTH] = health;
-		structure.name = name;
-		structure.symbol = symbol;
-		structure.colorString = colorString;
-		structure.description = description;
-		structure.drawFn = textureFn || defaultStructureDraw;
+		var structure = SYSTEM_DEFINE_CHILD(id, STRUCTURE);
+		structure.set(S_ID, id);
+		structure.set(S_SHAPE, WIDTH, width);
+		structure.set(S_SHAPE, HEIGHT, height);
+		structure.set(S_SHAPE, DEPTH, depth);
+		structure.set(S_COLOR, HEX, colorString);
+		structure.set(S_COLOR, DEC, color);
+		structure.set(S_SYMBOL, symbol);
+		structure.set(S_DESCRIPTION, description);
+
+		structure.set(S_DRAW, textureFn || defaultStructureDraw);
+
+		// var structure = new Uint32Array(STRUCTURE_DEFINITION_ENTRIES);
+		// structure[STRUCTURE_ID] = id;
+		// structure[STRUCTURE_WIDTH] = width;
+		// structure[STRUCTURE_HEIGHT] = height;
+		// structure[STRUCTURE_DEPTH] = depth;
+		// structure[STRUCTURE_COLOR] = color;
+		// structure[STRUCTURE_HEALTH] = health;
+		// structure.name = name;
+		// structure.symbol = symbol;
+		// structure.colorString = colorString;
+		// structure.description = description;
+		// structure.drawFn = textureFn || defaultStructureDraw;
 		uniqueStructures[id] = structure;
 	}
 
@@ -51,8 +63,8 @@ var Structures = Module(function() {
 		} else if (Mode === PLACEMENT_MODE) {
 			var yIndex = CHUNK_HAS_SPACE(uniqueStructures[constructionId]);
 			if (yIndex !== -1) {
-				var structure = new Int32Array(STRUCTURE_ENTRIES);
-				structure.set(uniqueStructures[constructionId]);
+				var structure = SYSTEM_CLONE_ENTITY(constructionId);
+				// structure.set(uniqueStructures[constructionId]);
 				var positionWithinChunkX = CHUNK_POSITION_X % CHUNK_DIMENTION;
 				var positionWithinChunkZ = CHUNK_POSITION_Z % CHUNK_DIMENTION;
 				if (positionWithinChunkX < 0) {
@@ -61,9 +73,12 @@ var Structures = Module(function() {
 				if (positionWithinChunkZ < 0) {
 					positionWithinChunkZ += CHUNK_DIMENTION;
 				}
-				structure[STRUCTURE_X] = positionWithinChunkX;
-				structure[STRUCTURE_Y] = yIndex;
-				structure[STRUCTURE_Z] = positionWithinChunkZ;
+				// structure[STRUCTURE_X] = positionWithinChunkX;
+				// structure[STRUCTURE_Y] = yIndex;
+				// structure[STRUCTURE_Z] = positionWithinChunkZ;
+				structure.set(S_POSITION, X, positionWithinChunkX);
+				structure.set(S_POSITION, Y, yIndex);
+				structure.set(S_POSITION, Z, positionWithinChunkZ);
 				CHUNK_ADD_STRUCTURE(positionWithinChunkX, yIndex, positionWithinChunkZ, structure);
 				Mode = IDLE_MODE;
 				return true;
@@ -88,7 +103,7 @@ var Structures = Module(function() {
 		for (var attr in uniqueStructures) {
 			var button = GUI_MAKE("button");
 			GUI_SET(button, "data-id", attr);
-			button.innerHTML = uniqueStructures[attr].name;
+			button.innerHTML = uniqueStructures[attr].get(S_DESCRIPTION);
 			button.addEventListener("click", eventListener, false);
 			GUI_PUT(button, structuresDiv);
 		}
@@ -100,6 +115,16 @@ var Structures = Module(function() {
 	// end functions
 
 	// other
+	SYSTEM_ON("systemReady", function() {
+		var structureEntity = SYSTEM_DEFINE_PARENT(STRUCTURE);
+		structureEntity.addSystem(S_SHAPE, [BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE]);
+		structureEntity.addSystem(S_POSITION, [0, 0, 0]);
+		structureEntity.addSystem(S_ID, [0]);
+		structureEntity.addSystem(S_COLOR, ["#000000", 0x000000]);
+		structureEntity.addSystem(S_DESCRIPTION, ["Structure"]);
+		structureEntity.addSystem(S_SYMBOL, ["S"]);
+		structureEntity.addSystem(S_DRAW, [defaultStructureDraw]);
+	});
 	// end other
 
 	return {
