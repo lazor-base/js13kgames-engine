@@ -3,12 +3,8 @@
 importScripts('perlin-noise.js');
 importScripts('seedrandom.min.js');
 
-// var chunkHeight = CHUNK_HEIGHT;
 var numberOfBlocksPerAxis = CHUNK_DIMENTION;
 var Noise;
-// var numberOfYChunks = chunkHeight / numberOfBlocksPerAxis;
-// var numberOfBlocksPerChunk = numberOfBlocksPerAxis * numberOfBlocksPerAxis * numberOfBlocksPerAxis;
-// var numberOfBlocksPerYAxis = numberOfBlocksPerAxis * numberOfBlocksPerAxis;
 
 function round(number) {
 	"use strict";
@@ -39,6 +35,8 @@ function chunkBlockAlgorithm(x, y, z, lastXBlock, lastYBlock /*,lastZBlock*/ ) {
 		data = round(noiseData * 256);
 	} else if (y === 10) {
 		data = 1;
+		// noiseData = (Noise.noise3D(x / 20, y / 20, z / 20) * (256));
+		// data = round(noiseData);
 	} else if (y === 9) { // ground level 9-6
 		plane = 11;
 		depth = 2;
@@ -106,6 +104,7 @@ function fillArray(blockArray, blockDataArray, heightDataArray, XCoord, ZCoord) 
 				data = chunkBlockAlgorithm(x, y, z, previousXBlock, previousYBlock, previousZBlock);
 				internalCoordinate = getCoordinate(x, y, z);
 				blockArray[internalCoordinate] = data;
+				blockDataArray[internalCoordinate] = 0;
 				previousYBlock = data;
 			}
 			for (y = 0; y < numberOfBlocksPerAxis; y++) {
@@ -130,7 +129,9 @@ self.addEventListener('message', function(event) {
 		var heightDataArray = new Uint8Array(event.data[HEIGHT_ARRAY]);
 		var XCoord = event.data[X_COORDINATE];
 		var ZCoord = event.data[Z_COORDINATE];
+		var drawX = event.data[DRAW_X];
+		var drawZ = event.data[DRAW_Z];
 		fillArray(blockArray, blockDataArray, heightDataArray, XCoord, ZCoord);
-		self.postMessage([CHUNK_COMPLETE, XCoord, ZCoord, blockArray.buffer, blockDataArray.buffer, heightDataArray.buffer], [blockArray.buffer, blockDataArray.buffer, heightDataArray.buffer]);
+		self.postMessage([CHUNK_COMPLETE, XCoord, ZCoord, blockArray.buffer, blockDataArray.buffer, heightDataArray.buffer, drawX, drawZ], [blockArray.buffer, blockDataArray.buffer, heightDataArray.buffer]);
 	}
 }, false);

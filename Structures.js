@@ -39,43 +39,25 @@ var Structures = Module(function() {
 		structure.set(S_COLOR, DEC, color);
 		structure.set(S_SYMBOL, symbol);
 		structure.set(S_DESCRIPTION, description);
-
 		structure.set(S_DRAW, textureFn || defaultStructureDraw);
-
-		// var structure = new Uint32Array(STRUCTURE_DEFINITION_ENTRIES);
-		// structure[STRUCTURE_ID] = id;
-		// structure[STRUCTURE_WIDTH] = width;
-		// structure[STRUCTURE_HEIGHT] = height;
-		// structure[STRUCTURE_DEPTH] = depth;
-		// structure[STRUCTURE_COLOR] = color;
-		// structure[STRUCTURE_HEALTH] = health;
-		// structure.name = name;
-		// structure.symbol = symbol;
-		// structure.colorString = colorString;
-		// structure.description = description;
-		// structure.drawFn = textureFn || defaultStructureDraw;
 		uniqueStructures[id] = structure;
 	}
 
-	function placeStructure() {
+	function placeStructure(xPosition, zPosition) {
 		if (Mode === IDLE_MODE) {
 			return false;
 		} else if (Mode === PLACEMENT_MODE) {
 			var yIndex = CHUNK_HAS_SPACE(uniqueStructures[constructionId]);
 			if (yIndex !== -1) {
 				var structure = SYSTEM_CLONE_ENTITY(constructionId);
-				// structure.set(uniqueStructures[constructionId]);
-				var positionWithinChunkX = CHUNK_POSITION_X % CHUNK_DIMENTION;
-				var positionWithinChunkZ = CHUNK_POSITION_Z % CHUNK_DIMENTION;
+				var positionWithinChunkX = xPosition % CHUNK_DIMENTION;
+				var positionWithinChunkZ = zPosition % CHUNK_DIMENTION;
 				if (positionWithinChunkX < 0) {
 					positionWithinChunkX += CHUNK_DIMENTION;
 				}
 				if (positionWithinChunkZ < 0) {
 					positionWithinChunkZ += CHUNK_DIMENTION;
 				}
-				// structure[STRUCTURE_X] = positionWithinChunkX;
-				// structure[STRUCTURE_Y] = yIndex;
-				// structure[STRUCTURE_Z] = positionWithinChunkZ;
 				structure.set(S_POSITION, X, positionWithinChunkX);
 				structure.set(S_POSITION, Y, yIndex);
 				structure.set(S_POSITION, Z, positionWithinChunkZ);

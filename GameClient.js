@@ -40,7 +40,7 @@ var Game = Module(function() {
 			}
 			if (action === MOUSE_LEFT) {
 				if (value === 1) {
-					STRUCTURES_PLACE();
+					CHUNK_PLACE();
 				}
 			}
 			if (action === MOUSE_RIGHT) {
@@ -59,7 +59,6 @@ var Game = Module(function() {
 		});
 		LOOP_EVERY("frame", function() {
 			DRAW_RENDER();
-			// console.clear();
 		});
 		// setTimeout(function() {
 		// console.warn("STOPPING TIME")
@@ -71,13 +70,6 @@ var Game = Module(function() {
 		// console.profile();
 		LOOP_GO(true);
 		STRUCTURES_GUI();
-		// var worker = new Worker('WebWorker.js');
-
-		// worker.addEventListener('message', function(e) {
-		// 	console.log('Worker said: ', e.data);
-		// }, false);
-
-		// worker.postMessage('Hello World'); // Send data to our worker.
 	}
 
 	function setup() {
@@ -89,13 +81,6 @@ var Game = Module(function() {
 		CONFIG_BIND(MOUSE, 0, MOUSE_RIGHT, MOUSE_RIGHT_CLICK);
 		CONFIG_BIND(MOUSE, 0, SCROLL_Y, MOUSE_WHEEL_Y);
 		CONTROL_LISTEN(document, MOUSE);
-		// var block1 = SYSTEM_DEFINE_CHILD(BLOCK);
-		// block1.set(S_ID, 0);
-		// BLOCK_SET(block1);
-		// var block2 = SYSTEM_DEFINE_CHILD(BLOCK);
-		// block2.set(S_ID, 1);
-		// BLOCK_SET(block2);
-		// console.log(block1, block2);
 		BLOCK_MAKE(BLOCK0, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 		BLOCK_MAKE(BLOCK1, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 		STRUCTURES_DEFINE(STRUCTURE0, "S", "Small Structure", BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, "#FF0000", 0xFF0000, 1);
