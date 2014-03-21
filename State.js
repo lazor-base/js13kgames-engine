@@ -5,78 +5,82 @@ var State = Module(function() {
 	// filenames: Engine
 
 	// variables
-	var currentStates = [];
-	var drawables = [];
-	var updateables = [];
 	var gameStates = {};
+	var historyStack = [];
+	var enabledStates = {};
 	// end variables
 
 	// functions
 
-	// function Focus(gameState) {}
-
-	function Pop() {
-		var state = currentStates[currentStates.length - 1];
-		state.Leaving();
-		currentStates.pop();
-		if (state._obscured === true) {
-			rebuildUpdateableAndDrawableQueues();
-		} else {
-			removeFromDrawablesOrUpdateables(state);
+	function deactivateState(gameState) {
+		if (enabledStates[gameState.Id] === 0) {
+			return false;
 		}
-		notifyRevealedStates();
-		return state;
+		if (historyStack[historyStack.length - 1] === gameState.Id) {
+			historyStack.pop();
+		}
+		gameState.Exiting();
+		enabledStates[gameState.Id] = 0;
+		notifyStates(gameState, false);
 	}
 
-	function Push(gameState) {
-		currentStates.push(gameState);
-		addToDrawablesOrUpdateables(gameState);
-		notifyObscuredStates();
+	function toggleState(gameState) {
+		if (enabledStates[gameState.Id] === 1) {
+			deactivateState(gameState);
+		} else {
+			activateState(gameState);
+		}
+	}
+
+	function activateState(gameState) {
+		if (enabledStates[gameState.Id] === 1) {
+			return false;
+		}
+		if (historyStack[historyStack.length - 1] !== gameState.Id) {
+			historyStack.push(gameState.Id);
+		}
+		enabledStates[gameState.Id] = 1;
+		notifyStates(gameState, true);
 		gameState.Entered();
 	}
 
-	function Peek() {
-		return currentStates[0];
+	function previousState() {
+		deactivateState(gameStates[historyStack[historyStack.length - 1]]);
+		activateState(gameStates[historyStack[historyStack.length - 1]]);
 	}
 
-	function notifyObscuredStates() {
-		if (currentStates.length) {
-			var index = currentStates.length - 2;
-			while (index > 0) {
-				if (currentStates[index]._obscured === true) {
-					break;
-				}--index;
+	function notifyStates(gameState, hide) {
+		var depth = gameState.DepthIndex;
+		var id = 0;
+		for (id in enabledStates) {
+			if (id !== gameState.Id) {
+				if (gameStates[id]._obscured === false) {
+					if (hide && gameStates[id].DepthIndex < depth) {
+						gameStates[id].Obscuring();
+						gameStates[id]._obscured = true;
+					}
+				}
 			}
-			while (index < currentStates.length - 1) {
-				currentStates[index].Obscuring();
-				currentStates[index]._obscured = true;
-				++index;
+		}
+			var lastDepth = 0;
+		for (var i = historyStack.length - 1; i > -1; i--) {
+			id = historyStack[i];
+			if (enabledStates[id] === 1 && gameStates[id]._obscured === true && !hide && gameStates[id].DepthIndex >= lastDepth) {
+				gameStates[id]._obscured = false;
+				gameStates[id].Revealed();
+				lastDepth = gameStates[id].DepthIndex;
 			}
 		}
 	}
 
-	function notifyRevealedStates() {
-		if (currentStates.length) {
-			var index = currentStates.length - 1;
-			while (index > 0) {
-				if (currentStates[index]._obscured === true) {
-					break;
-				}--index;
-			}
-			while (index < currentStates.length) {
-				currentStates[index]._obscured = false;
-				currentStates[index].Revealed();
-				++index;
-			}
-		}
-	}
-
-	function newGameState(Id, Entered, Leaving, Obscuring, Revealed, Update, Draw) {
+	function newGameState(Id, DepthIndex, FullScreen, Entered, Exiting, Obscuring, Revealed, Update, Draw) {
 		var gameState = {
 			Id: Id,
+			DepthIndex: DepthIndex,
+			FullScreen: FullScreen,
 			_obscured: false,
 			Entered: Entered,
-			Leaving: Leaving,
+			Exiting: Exiting,
 			Obscuring: Obscuring,
 			Revealed: Revealed,
 			Update: Update,
@@ -86,49 +90,15 @@ var State = Module(function() {
 		return gameState;
 	}
 
-	function Update(deltaTime) {
-		for (var i = 0; i < updateables.length; i++) {
-			updateables.Update(deltaTime);
-		}
-	}
-
-	function Draw(deltaTime) {
-		for (var i = 0; i < drawables.length; i++) {
-			drawables.Draw(deltaTime);
-		}
-	}
-
-	function addToDrawablesOrUpdateables(gameState) {
-		if (typeof gameState.Draw === "function") {
-			drawables.push(gameState);
-		}
-		if (typeof gameState.Update === "function") {
-			updateables.push(gameState);
-		}
-	}
-
-	function removeFromDrawablesOrUpdateables(gameState) {
-		if (typeof gameState.Draw === "function") {
-			drawables.pop();
-		}
-		if (typeof gameState.Update === "function") {
-			updateables.pop();
-		}
-	}
-
-	function rebuildUpdateableAndDrawableQueues() {
-		drawables.length = 0;
-		updateables.length = 0;
-		if (currentStates.length) {
-			var index = currentStates.length - 1;
-			while (index > 0) {
-				if (currentStates[index]._obscured === true) {
-					break;
-				}--index;
-			}
-			while (index < currentStates.length) {
-				addToDrawablesOrUpdateables(currentStates[index]);
-				++index;
+	function UpdateAndDraw(deltaTime) {
+		for (var id in enabledStates) {
+			if (enabledStates[id] === 1 && gameStates[id]._obscured === false) {
+				if (typeof gameStates[id].Update === "function") {
+					gameStates[id].Update(deltaTime);
+				}
+				if (typeof gameStates[id].Draw === "function") {
+					gameStates[id].Draw(deltaTime);
+				}
 			}
 		}
 	}
@@ -136,18 +106,17 @@ var State = Module(function() {
 
 	// other
 	LOOP_EVERY("frame", function(deltaTime) {
-		Update(deltaTime);
-		Draw(deltaTime);
+		UpdateAndDraw(deltaTime);
 	});
 	// end other
 
 	return {
 		// return
-		pop:Pop,
-		push:Push,
-		peek:Peek,
-		// focus:Focus,
-		newState:newGameState
+		deactivate: deactivateState,
+		toggle: toggleState,
+		activate: activateState,
+		newState: newGameState,
+		previous: previousState
 		// end return
 	};
 });
