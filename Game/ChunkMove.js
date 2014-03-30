@@ -173,36 +173,34 @@ var Chunk = Module(function() {
 		if (type === "X") {
 			mouseX = value;
 			mouseXPixels = value - offsetX;
-			// if (mouseXPixels < 0) {
-			// mouseXPixels = ((maxSize + 1) * BLOCK_SIZE * CHUNK_DIMENTION) + mouseXPixels;
-			// }
-			// mouseXBlocks = resize(mouseXPixels, BLOCK_SIZE);
 			mouseXBlocks = Math.round((mouseXPixels - BLOCK_SIZE / 2) / BLOCK_SIZE);
 			mouseXPixels = mouseXPixels % BLOCK_SIZE;
 			mouseXChunks = Math.round((mouseXBlocks - CHUNK_DIMENTION / 2) / CHUNK_DIMENTION);
 			mouseXChunks = trueChunkPosition(mouseXChunks);
-			if (mouseXBlocks < 0) {
+			if (mouseXPixels > BLOCK_SIZE * CHUNK_DIMENTION * (maxSize + 1)) {
 				mouseXBlocks += CHUNK_DIMENTION;
 			}
-			mouseXBlocks = mouseXBlocks % CHUNK_DIMENTION;
+			if (mouseXPixels < 0) {
+				mouseXBlocks += (CHUNK_DIMENTION * Math.abs(mouseXChunks));
+			}
+			mouseXBlocks = Math.abs(mouseXBlocks % CHUNK_DIMENTION);
 		} else {
 			mouseZ = value;
 			mouseZPixels = value - offsetZ;
-			// if (mouseZPixels < 0) {
-			// mouseZPixels = ((maxSize + 1) * BLOCK_SIZE * CHUNK_DIMENTION) + mouseZPixels;
-			// }
-			// mouseZBlocks = resize(mouseZPixels, BLOCK_SIZE);
 			mouseZBlocks = Math.round((mouseZPixels - BLOCK_SIZE / 2) / BLOCK_SIZE);
 			mouseZPixels = mouseZPixels % BLOCK_SIZE;
 			mouseZChunks = Math.round((mouseZBlocks - CHUNK_DIMENTION / 2) / CHUNK_DIMENTION);
 			mouseZChunks = trueChunkPosition(mouseZChunks);
-			if (mouseZBlocks < 0) {
+			if (mouseZPixels > BLOCK_SIZE * CHUNK_DIMENTION * (maxSize + 1)) {
 				mouseZBlocks += CHUNK_DIMENTION;
 			}
-			mouseZBlocks = mouseZBlocks % CHUNK_DIMENTION;
+			if (mouseZPixels < 0) {
+				mouseZBlocks += (CHUNK_DIMENTION * Math.abs(mouseZChunks));
+			}
+			mouseZBlocks = Math.abs(mouseZBlocks % CHUNK_DIMENTION);
 		}
 		if (text) {
-			text.setText(mouseXBlocks + "," + offsetYBlocks + "," + mouseZBlocks);
+			text.setText(mouseXChunks + "," + mouseZChunks + ": " + mouseXBlocks + "," + offsetYBlocks + "," + mouseZBlocks);
 		}
 		drawTempBuilding();
 	}

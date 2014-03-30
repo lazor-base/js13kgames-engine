@@ -23,6 +23,7 @@ var Chunk = Module(function() {
 		});
 		chunk.Structures.push(structure);
 		renderPosition(function(positionX, positionZ) {
+			console.log(positionX, positionZ);
 			drawStructures(chunk, positionX, positionZ);
 		}, mouseXChunks, mouseZChunks);
 		buildMode = IDLE_MODE;
