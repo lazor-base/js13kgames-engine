@@ -87,8 +87,8 @@
 			make: makeGUI,
 			set: setGUI,
 			duplicate:duplicate,
-			on: event.on,
-			emit: event.emit
+			off: event.off,
+			on: event.on
 			// endreturn
 		};
 	});

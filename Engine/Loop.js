@@ -78,6 +78,7 @@ var Loop = Module(function(event) {
 		go: go,
 		queue: queue,
 		every: event.on,
+		remove: event.off,
 		// end return
 	};
 });

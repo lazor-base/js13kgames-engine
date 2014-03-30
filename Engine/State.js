@@ -10,11 +10,12 @@ Module(function() {
 	var enabledStates = {};
 	var numberOfStates = 0;
 	var historyIndex = -1;
+	var rewind = false;
 	// end variables
 
 	// functions
 
-	function deactivateState(gameState, rewind) {
+	function deactivateState(gameState) {
 		if (enabledStates[gameState.Id] === 0) {
 			return false;
 		}
@@ -23,18 +24,19 @@ Module(function() {
 		notifyStates(gameState);
 		if (gameState.FullScreen && !rewind) {
 			historyIndex--;
+			// console.log("reverse history", historyIndex)
 		}
 	}
 
-	function toggleState(gameState, rewind) {
+	function toggleState(gameState) {
 		if (enabledStates[gameState.Id] === 1) {
-			deactivateState(gameState, rewind);
+			deactivateState(gameState);
 		} else {
-			activateState(gameState, rewind);
+			activateState(gameState);
 		}
 	}
 
-	function activateState(gameState, rewind) {
+	function activateState(gameState) {
 		if (enabledStates[gameState.Id] === 1) {
 			return false;
 		}
@@ -49,11 +51,11 @@ Module(function() {
 			for (var id in enabledStates) {
 				historyStack[historyIndex][id] = enabledStates[id];
 			}
+				// console.log("new history", historyStack[historyIndex], historyIndex)
 		}
 	}
 
 	function previousState() {
-		console.log(historyStack, historyIndex);
 		historyIndex--;
 		if (historyIndex < 0) {
 			historyIndex = -1;
@@ -64,7 +66,9 @@ Module(function() {
 			var historyState = historyStack[historyIndex][i];
 			var currentState = enabledStates[i];
 			if (historyState !== currentState) {
-				toggleState(gameStates[i], true);
+				rewind = true;
+				toggleState(gameStates[i]);
+				rewind = false;
 			}
 		}
 	}
@@ -74,7 +78,7 @@ Module(function() {
 			var id = 0;
 			var lastDepth = 0;
 			for (id in enabledStates) {
-				if (enabledStates[id] && gameStates[id].DepthIndex >= lastDepth && gameStates[id].FullScreen) {
+				if (enabledStates[id] && gameStates[id].DepthIndex >= lastDepth/* && gameStates[id].FullScreen*/) {
 					lastDepth = gameStates[id].DepthIndex;
 				}
 			}

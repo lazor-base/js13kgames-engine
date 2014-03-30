@@ -67,7 +67,7 @@ Module(function(event) {
 		// 	renderer.context.mozImageSmoothingEnabled = false;
 		// 	renderer.context.webkitImageSmoothingEnabled = false;
 		// }
-		GUI_PUT(renderer.view);
+
 		EMIT_EVENT("RenderReady");
 	});
 	GUI_ON("resize", function() {
@@ -87,6 +87,7 @@ Module(function(event) {
 		get renderer() {
 			return renderer;
 		},
+		off: event.off,
 		on:event.on
 		// end return
 	};
