@@ -207,7 +207,7 @@ var Player = Module(function(event) {
 
 	function setMaxPlayers(playerNumber) {
 		maxPlayers = playerNumber;
-		activePlayers = new UInt8Array(playerNumber);
+		activePlayers = new Uint8Array(playerNumber);
 	}
 
 	function register(username, id, keymap, settings) {
