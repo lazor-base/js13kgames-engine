@@ -17,12 +17,11 @@ Module(function() {
 	}
 
 	function readFile(location, callback) {
-		fs.readFile(location, "utf8", function(err, data) {
-			if (err) {
-				throw err;
-			}
-			callback(data);
-		});
+		if(callback) {
+			console.trace();
+			throw "NO CALLBACK";
+		}
+		return fs.readFileSync(location, "utf8");
 	}
 
 	// end functions

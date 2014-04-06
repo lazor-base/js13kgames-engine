@@ -213,6 +213,7 @@ var Player = Module(function(event) {
 	function register(username, id, keymap, settings) {
 		if (username && id && keymap && settings) {
 			players[id] = [id, username, keymap, settings];
+			uniqueId = id+1;
 		} else {
 			var newOptions = JSON.parse(JSON.stringify(OPTIONS_DEFAULTS));
 			var newKeyMap = JSON.parse(JSON.stringify(CONFIG_DEFAULTS));
