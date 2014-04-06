@@ -12,28 +12,30 @@ var Player = Module(function(event) {
 	var playerOneUsingGamepad = false;
 	var usedGamePads = [];
 	var length = 6;
+	var maxPlayers = 0;
+	var activePlayers;
 	// end variables
 
 	// functions
 
-	function register(mouse, keyboard, gamepad) {
-		if(!players) {
-			players = STRUCT_GET(STRUCT_MAKE(length + CONFIG_LENGTH, INT8));
-		}
-		var player = players.get();
-		player.set(LOCALID, uniqueId);
-		player.set(REMOTEID, -1);
-		player.set(PING, 30);
-		player.set(MOUSE, mouse);
-		player.set(KEYBOARD, keyboard);
-		player.set(GAMEPAD, gamepad);
-		uniqueId++;
-		return player;
-	}
+	// function register(mouse, keyboard, gamepad) {
+	// 	if (!players) {
+	// 		players = STRUCT_GET(STRUCT_MAKE(length + CONFIG_LENGTH, INT8));
+	// 	}
+	// 	var player = players.get();
+	// 	player.set(LOCALID, uniqueId);
+	// 	player.set(REMOTEID, -1);
+	// 	player.set(PING, 30);
+	// 	player.set(MOUSE, mouse);
+	// 	player.set(KEYBOARD, keyboard);
+	// 	player.set(GAMEPAD, gamepad);
+	// 	uniqueId++;
+	// 	return player;
+	// }
 
 	function find(type, id, callback) {
 		var found = false;
-		if(type === MOUSE && players.first.get(type) === id) {
+		if (type === MOUSE && players.first.get(type) === id) {
 			return callback(players.first);
 		}
 		players.each(function(player) {
@@ -145,11 +147,91 @@ var Player = Module(function(event) {
 		return false;
 	}
 
+	var walk = function(dir, done) {
+		"use strict";
+		var results = [];
+		fs.readdir(dir, function(err, list) {
+			if (err) {
+				return done(err);
+			}
+			var pending = list.length;
+			if (!pending) {
+				return done(null, results);
+			}
+			list.forEach(function(file) {
+				file = dir + "/" + file;
+				fs.stat(file, function(err, stat) {
+					if (stat && stat.isDirectory()) {
+						walk(file, function(err, res) {
+							results = results.concat(res);
+							if (!--pending) {
+								done(null, results);
+							}
+						});
+					} else {
+						if (isGoodFile(file)) {
+							results.push(file);
+						}
+						if (!--pending) {
+							done(null, results);
+						}
+					}
+				});
+			});
+		});
+	};
+
 	function initPlayer() {
+		var fs = require("fs");
+		var path = require("path");
 		playerOneCanUseController = unusedControllers();
 		CONTROL_ON("connect", onGamePadConnect);
 		CONTROL_ON("disconnect", onGamePadDisconnect);
+		players = [];
+		fs.exists("User/", function(exists) {
+			if (!exists) {
+				fs.mkdir("User");
+			} else {
+				walk("User", function(results) {
+					for (var i = 0; i < results.length; i++) {
+						if (results[i] === "player.json") {
+							IO_READ(results[i], function(fileData) {
+								register(fileData[PLAYER_NAME], fileData[PLAYER_ID], fileData[PLAYER_KEYS], fileData[PLAYER_OPTIONS]);
+							});
+						}
+					}
+				});
+			}
+		});
 	}
+
+	function setMaxPlayers(playerNumber) {
+		maxPlayers = playerNumber;
+		activePlayers = new UInt8Array(playerNumber);
+	}
+
+	function register(username, id, keymap, settings) {
+		if (username && id && keymap && settings) {
+			players[id] = [id, username, keymap, settings];
+		} else {
+			var newOptions = JSON.parse(JSON.stringify(OPTIONS_DEFAULTS));
+			var newKeyMap = JSON.parse(JSON.stringify(CONFIG_DEFAULTS));
+			players[id] = [uniqueId, username, newKeyMap, newOptions];
+			IO_WRITE(JSON.stringify(players[id]), "User/" + uniqueId + "/player.json");
+			uniqueId++;
+		}
+	}
+
+	function login(playerId) {
+
+	}
+
+	function eachPlayer(fn) {
+		for(var i=0;i<players.length;i++) {
+			fn(players[i]);
+		}
+	}
+
 	// end functions
 
 	// other
@@ -161,10 +243,12 @@ var Player = Module(function(event) {
 			return length;
 		},
 		register: register,
+		each: eachPlayer,
 		find: find,
 		init: initPlayer,
 		isLocal: isLocal,
 		togglePlayer: togglePlayer,
+		max: setMaxPlayers
 		// end return
 	};
 });

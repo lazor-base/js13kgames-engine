@@ -3,7 +3,7 @@
 	"main": "app://RTS/index.html",
 	"name": "RTS",
 	"description": "RTS Game Client",
-	"version": "0.6.0-alpha+03.30.14",
+	"version": "0.7.0-alpha+04.02.14",
 	"keywords": ["node-webkit", "rts"],
 	"js-flags": "--harmony",
 	"window": {
