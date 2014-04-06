@@ -4,11 +4,11 @@ Module(function() {
 	// targets: Client
 	// filenames: Engine
 	// variables
-	var fs = require("fs");
 	// end variables
 	// functions
 
 	function writeFile(fileData, location) {
+		var fs = require("fs");
 		fs.writeFile(location, fileData, function(err) {
 			if (err) {
 				throw err;
@@ -17,7 +17,8 @@ Module(function() {
 	}
 
 	function readFile(location, callback) {
-		if(callback) {
+		var fs = require("fs");
+		if (callback) {
 			console.trace();
 			throw "NO CALLBACK";
 		}
