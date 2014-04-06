@@ -9,11 +9,7 @@ Module(function() {
 
 	function writeFile(fileData, location) {
 		var fs = require("fs");
-		fs.writeFile(location, fileData, function(err) {
-			if (err) {
-				throw err;
-			}
-		});
+		fs.writeFileSync(location, fileData);
 	}
 
 	function readFile(location, callback) {
@@ -22,7 +18,7 @@ Module(function() {
 			console.trace();
 			throw "NO CALLBACK";
 		}
-		return fs.readFileSync(location, "utf8");
+		return JSON.parse(fs.readFileSync(location, "utf8"));
 	}
 
 	// end functions

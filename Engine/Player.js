@@ -149,6 +149,7 @@ var Player = Module(function(event) {
 
 	var walk = function(dir, done) {
 		"use strict";
+		var fs = require("fs");
 		var results = [];
 		fs.readdir(dir, function(err, list) {
 			if (err) {
@@ -169,9 +170,7 @@ var Player = Module(function(event) {
 							}
 						});
 					} else {
-						if (isGoodFile(file)) {
-							results.push(file);
-						}
+						results.push(file);
 						if (!--pending) {
 							done(null, results);
 						}
@@ -181,7 +180,7 @@ var Player = Module(function(event) {
 		});
 	};
 
-	function initPlayer() {
+	function initPlayer(done) {
 		var fs = require("fs");
 		var path = require("path");
 		playerOneCanUseController = unusedControllers();
@@ -192,14 +191,14 @@ var Player = Module(function(event) {
 			if (!exists) {
 				fs.mkdir("User");
 			} else {
-				walk("User", function(results) {
+				walk("User", function(err, results) {
 					for (var i = 0; i < results.length; i++) {
-						if (results[i] === "player.json") {
-							IO_READ(results[i], function(fileData) {
-								register(fileData[PLAYER_NAME], fileData[PLAYER_ID], fileData[PLAYER_KEYS], fileData[PLAYER_OPTIONS]);
-							});
+						if (results[i].indexOf("player.json") > -1) {
+							var fileData = IO_READ(results[i]);
+							register(fileData[PLAYER_NAME], fileData[PLAYER_ID], fileData[PLAYER_KEYS], fileData[PLAYER_OPTIONS]);
 						}
 					}
+					done();
 				});
 			}
 		});
@@ -211,14 +210,16 @@ var Player = Module(function(event) {
 	}
 
 	function register(username, id, keymap, settings) {
-		if (username && id && keymap && settings) {
+		var fs = require("fs");
+		if (typeof username !== "undefined" && typeof id !== "undefined" && typeof keymap !== "undefined" && typeof settings !== "undefined") {
 			players[id] = [id, username, keymap, settings];
-			uniqueId = id+1;
+			uniqueId = id + 1;
 		} else {
-			var newOptions = JSON.parse(JSON.stringify(OPTIONS_DEFAULTS));
-			var newKeyMap = JSON.parse(JSON.stringify(CONFIG_DEFAULTS));
-			players[id] = [uniqueId, username, newKeyMap, newOptions];
-			IO_WRITE(JSON.stringify(players[id]), "User/" + uniqueId + "/player.json");
+			var newOptions = JSON.parse(JSON.stringify(OPTIONS_DEFAULTS()));
+			var newKeyMap = JSON.parse(JSON.stringify(CONFIG_DEFAULTS()));
+			players[uniqueId] = [uniqueId, username, newKeyMap, newOptions];
+			fs.mkdir("User/" + uniqueId);
+			IO_WRITE(JSON.stringify(players[uniqueId]), "User/" + uniqueId + "/player.json");
 			uniqueId++;
 		}
 	}
@@ -228,7 +229,7 @@ var Player = Module(function(event) {
 	}
 
 	function eachPlayer(fn) {
-		for(var i=0;i<players.length;i++) {
+		for (var i = 0; i < players.length; i++) {
 			fn(players[i]);
 		}
 	}
@@ -244,6 +245,7 @@ var Player = Module(function(event) {
 			return length;
 		},
 		register: register,
+		login: login,
 		each: eachPlayer,
 		find: find,
 		init: initPlayer,
