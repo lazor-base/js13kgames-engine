@@ -14,7 +14,7 @@ Module(function() {
 	function defaultOptions() {
 		if (!conciseOptions) {
 			conciseOptions = {};
-			for (var i=0;i<defaultOptionsObject.options;i++) {
+			for (var i=0;i<defaultOptionsObject.options.length;i++) {
 				var option = defaultOptionsObject.options[i];
 				if(!conciseOptions[option.category]) {
 					conciseOptions[option.category] = {};

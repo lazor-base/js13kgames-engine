@@ -15,10 +15,10 @@ Module(function() {
 		if (!conciseKeys) {
 			conciseKeys = {};
 			for (var attr in defaultControls) {
-				for (var i = 0; i < defaultControls[attr].controls; i++) {
+				for (var i = 0; i < defaultControls[attr].controls.length; i++) {
 					var option = defaultControls[attr].controls[i];
-					if (!conciseKeys[option.category]) {
-						conciseKeys[option.category] = {};
+					if (!conciseKeys[attr]) {
+						conciseKeys[attr] = {};
 					}
 					conciseKeys[attr][option.command] = option.keys;
 				}

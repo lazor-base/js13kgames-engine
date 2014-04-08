@@ -190,6 +190,7 @@ var Player = Module(function(event) {
 		fs.exists("User/", function(exists) {
 			if (!exists) {
 				fs.mkdir("User");
+				done();
 			} else {
 				walk("User", function(err, results) {
 					for (var i = 0; i < results.length; i++) {
